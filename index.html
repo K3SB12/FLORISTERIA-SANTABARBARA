@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Floristería Santa Bárbara – Flores frescas y arreglos a domicilio en Santa Bárbara, Heredia, Costa Rica. Pedidos por WhatsApp.">
+  <meta property="og:title" content="Floristería Santa Bárbara">
+  <meta property="og:description" content="Flores frescas desde 1997. Entrega el mismo día en Santa Bárbara, Heredia.">
+  <meta property="og:image" content="fondo-floristeria.jpg">
+  <title>Floristería Santa Bárbara | Flores frescas – Costa Rica</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --verde:       #2D5A3D;
+      --verde-claro: #4A7C59;
+      --crema:       #F9F5EE;
+      --crema-dark:  #EEE8DC;
+      --rosa:        #C41E3A;
+      --rosa-suave:  #E8B4B8;
+      --dorado:      #B8960C;
+      --oscuro:      #1A1A1A;
+      --gris:        #6B7280;
+      --blanco:      #FFFFFF;
+      --sombra:      0 4px 24px rgba(45,90,61,.12);
+      --radio:       16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--crema);
+      color: var(--oscuro);
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(249,245,238,.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(45,90,61,.1);
+      transition: box-shadow .3s;
+    }
+    .header-inner {
+      max-width: 1280px; margin: 0 auto;
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .logo-emoji { font-size: 28px; animation: float 3s ease-in-out infinite; }
+    .logo-text h1 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--verde); line-height: 1.1; }
+    .logo-text span { font-size: 11px; color: var(--gris); letter-spacing: .05em; }
+    nav { display: flex; align-items: center; gap: 28px; }
+    nav a { text-decoration: none; font-size: 14px; font-weight: 500; color: var(--gris); transition: color .2s; }
+    nav a:hover { color: var(--verde); }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .cart-btn {
+      position: relative; background: none; border: none; cursor: pointer;
+      font-size: 20px; color: var(--gris); padding: 8px; transition: color .2s;
+    }
+    .cart-btn:hover { color: var(--verde); }
+    .cart-badge {
+      position: absolute; top: 2px; right: 2px;
+      background: var(--rosa); color: #fff;
+      font-size: 10px; font-weight: 700;
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      display: none;
+    }
+    .btn-wa {
+      display: flex; align-items: center; gap: 6px;
+      background: #25D366; color: #fff;
+      font-size: 13px; font-weight: 600;
+      padding: 8px 16px; border-radius: 24px;
+      text-decoration: none; transition: background .2s, transform .15s;
+    }
+    .btn-wa:hover { background: #1ebe5d; transform: translateY(-1px); }
+    .menu-btn { display: none; background: none; border: none; font-size: 22px; color: var(--verde); cursor: pointer; }
+    .mobile-nav {
+      display: none;
+      position: fixed; top: 68px; left: 0; right: 0;
+      background: var(--blanco);
+      border-bottom: 1px solid rgba(45,90,61,.1);
+      padding: 16px 24px;
+      flex-direction: column; gap: 12px;
+      z-index: 99;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a { text-decoration: none; font-size: 15px; color: var(--oscuro); padding: 8px 0; border-bottom: 1px solid var(--crema-dark); }
+    .mobile-nav a.admin-link { color: var(--rosa); font-weight: 600; }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+    }
+    .hero-bg img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(26,26,26,.82) 0%, rgba(26,26,26,.40) 60%, transparent 100%);
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      max-width: 1280px; margin: 0 auto;
+      padding: 100px 24px 60px;
+      color: #fff;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.15); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.25);
+      color: var(--rosa-suave); font-size: 13px; font-weight: 500;
+      padding: 6px 14px; border-radius: 20px;
+      margin-bottom: 24px;
+      animation: fadeUp .6s ease-out both;
+    }
+    .hero h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(42px, 7vw, 86px);
+      font-weight: 600; line-height: 1.08;
+      margin-bottom: 20px;
+      animation: fadeUp .6s .1s ease-out both;
+    }
+    .hero h2 em { color: var(--rosa-suave); font-style: italic; }
+    .hero p {
+      font-size: clamp(15px, 2vw, 18px);
+      color: rgba(255,255,255,.85); max-width: 500px;
+      line-height: 1.65; margin-bottom: 36px;
+      animation: fadeUp .6s .2s ease-out both;
+    }
+    .hero-btns {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      animation: fadeUp .6s .3s ease-out both;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--rosa); color: #fff;
+      font-size: 15px; font-weight: 600;
+      padding: 14px 28px; border-radius: 32px;
+      text-decoration: none;
+      box-shadow: 0 6px 20px rgba(196,30,58,.4);
+      transition: background .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-primary:hover { background: #a81830; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(196,30,58,.45); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.12); backdrop-filter: blur(8px);
+      color: #fff; font-size: 15px; font-weight: 500;
+      padding: 14px 28px; border-radius: 32px;
+      border: 1.5px solid rgba(255,255,255,.35);
+      text-decoration: none;
+      transition: background .2s, transform .15s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,.22); transform: translateY(-2px); }
+
+    /* ─── BADGES ROW ─── */
+    .badges-row {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 48px; animation: fadeUp .6s .4s ease-out both;
+    }
+    .badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.12); backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff; font-size: 12px; font-weight: 500;
+      padding: 6px 12px; border-radius: 12px;
+    }
+
+    /* ─── CATEGORÍAS TABS ─── */
+    .catalogo-section { padding: 80px 24px 60px; }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-label {
+      display: inline-block; background: var(--verde);
+      color: #fff; font-size: 11px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 20px; margin-bottom: 12px;
+    }
+    .section-header h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(32px, 5vw, 52px); font-weight: 600; color: var(--oscuro);
+    }
+    .section-header p { color: var(--gris); font-size: 15px; margin-top: 8px; }
+
+    .filtros-wrap {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; margin-bottom: 36px;
+    }
+    .filtro-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--blanco); color: var(--gris);
+      font-size: 13px; font-weight: 500;
+      padding: 8px 18px; border-radius: 24px;
+      border: 1.5px solid #E5E7EB;
+      cursor: pointer; transition: all .2s;
+    }
+    .filtro-btn:hover { border-color: var(--verde); color: var(--verde); }
+    .filtro-btn.active {
+      background: var(--verde); color: #fff;
+      border-color: var(--verde); box-shadow: 0 4px 12px rgba(45,90,61,.25);
+    }
+
+    /* ─── GRID PRODUCTOS ─── */
+    .productos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 1280px; margin: 0 auto;
+    }
+    .producto-card {
+      background: var(--blanco);
+      border-radius: var(--radio);
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,.06);
+      box-shadow: var(--sombra);
+      transition: transform .25s, box-shadow .25s;
+      position: relative;
+    }
+    .producto-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(45,90,61,.15); }
+    .card-img-wrap {
+      position: relative;
+      aspect-ratio: 1;
+      overflow: hidden; background: var(--crema);
+    }
+    .card-img-wrap img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform .4s ease;
+    }
+    .producto-card:hover .card-img-wrap img { transform: scale(1.06); }
+    .card-badge-oferta {
+      position: absolute; top: 10px; left: 10px;
+      background: var(--rosa); color: #fff;
+      font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 12px;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .card-badge-dest {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--dorado); color: #fff;
+      font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 12px;
+    }
+    .card-zoom-btn {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(255,255,255,.85); backdrop-filter: blur(4px);
+      border: none; cursor: pointer;
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: var(--verde);
+      opacity: 0; transition: opacity .2s;
+    }
+    .producto-card:hover .card-zoom-btn { opacity: 1; }
+    .card-body { padding: 14px 16px 16px; }
+    .card-codigo { font-size: 11px; color: var(--gris); margin-bottom: 4px; }
+    .card-nombre {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px; font-weight: 600;
+      color: var(--oscuro); line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .card-desc { font-size: 12px; color: var(--gris); line-height: 1.5; margin-bottom: 10px; min-height: 36px; }
+    .card-precio-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+    .card-precio { font-size: 20px; font-weight: 700; color: var(--verde); }
+    .card-precio-tachado { font-size: 13px; color: #9CA3AF; text-decoration: line-through; }
+    .btn-agregar {
+      width: 100%; padding: 11px;
+      background: var(--verde); color: #fff;
+      font-size: 13px; font-weight: 600;
+      border: none; border-radius: 10px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: background .2s, transform .15s;
+    }
+    .btn-agregar:hover { background: var(--verde-claro); transform: translateY(-1px); }
+    .btn-agregar.added { background: #16A34A; }
+
+    /* empty state */
+    .empty-state {
+      text-align: center; padding: 60px 24px; color: var(--gris);
+    }
+    .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: .35; }
+
+    /* loading skeleton */
+    .skeleton-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px; max-width: 1280px; margin: 0 auto;
+    }
+    .skeleton-card {
+      background: var(--blanco); border-radius: var(--radio);
+      overflow: hidden; border: 1px solid rgba(0,0,0,.06);
+    }
+    .skeleton-img { aspect-ratio: 1; background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size: 200%; animation: shimmer 1.5s infinite; }
+    .skeleton-line { height: 12px; border-radius: 6px; background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); background-size: 200%; animation: shimmer 1.5s infinite; margin: 8px 14px; }
+    .skeleton-line.short { width: 60%; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ─── CARACTERÍSTICAS ─── */
+    .features-section {
+      background: var(--verde); color: #fff;
+      padding: 60px 24px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px; max-width: 1280px; margin: 0 auto;
+      text-align: center;
+    }
+    .feature-item i { font-size: 32px; margin-bottom: 12px; opacity: .85; }
+    .feature-item h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .feature-item p { font-size: 13px; opacity: .75; line-height: 1.5; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--oscuro); color: rgba(255,255,255,.7);
+      padding: 56px 24px 28px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px; max-width: 1280px; margin: 0 auto 40px;
+    }
+    .footer-brand h3 { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: #fff; margin-bottom: 10px; }
+    .footer-brand p { font-size: 13px; line-height: 1.65; }
+    footer h4 { color: #fff; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: 8px; }
+    footer ul li a { color: rgba(255,255,255,.6); text-decoration: none; font-size: 13px; transition: color .2s; }
+    footer ul li a:hover { color: #fff; }
+    .footer-contact li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; margin-bottom: 10px; }
+    .footer-contact li i { margin-top: 2px; color: var(--rosa-suave); width: 14px; }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding-top: 20px; max-width: 1280px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; flex-wrap: wrap; gap: 10px;
+    }
+    .footer-bottom a { color: rgba(255,255,255,.5); text-decoration: none; }
+    .footer-bottom a:hover { color: #fff; }
+
+    /* ─── MODAL IMAGEN ─── */
+    .img-modal {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,.92); align-items: center; justify-content: center;
+    }
+    .img-modal.open { display: flex; }
+    .img-modal img { max-width: 90vw; max-height: 90vh; border-radius: 10px; object-fit: contain; }
+    .img-modal-close {
+      position: absolute; top: 20px; right: 20px;
+      background: rgba(255,255,255,.15); border: none;
+      color: #fff; font-size: 24px; width: 44px; height: 44px;
+      border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ─── TOAST ─── */
+    .toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(30px);
+      background: var(--oscuro); color: #fff;
+      font-size: 14px; font-weight: 500;
+      padding: 12px 20px; border-radius: 24px;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      opacity: 0; transition: opacity .3s, transform .3s;
+      z-index: 300; pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast i { color: #4ADE80; }
+
+    /* ─── WA FLOTANTE ─── */
+    .wa-float {
+      position: fixed; bottom: 20px; right: 20px; z-index: 200;
+      background: #25D366; color: #fff;
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; text-decoration: none;
+      box-shadow: 0 6px 20px rgba(37,211,102,.5);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .wa-float:hover { transform: scale(1.1); box-shadow: 0 10px 28px rgba(37,211,102,.6); }
+
+    /* ─── ANIMACIONES ─── */
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ─── RESPONSIVE ─── */
+    @media(max-width:900px){
+      nav { display: none; }
+      .menu-btn { display: block; }
+      .btn-wa { display: none; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media(max-width:600px){
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .hero-btns { flex-direction: column; }
+      .btn-primary, .btn-outline { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header id="header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-emoji">🌸</span>
+      <div class="logo-text">
+        <h1>Santa Bárbara</h1>
+        <span>Flores frescas · Costa Rica</span>
+      </div>
+    </a>
+
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="#catalogo">Catálogo</a>
+      <a href="carrito.html">Carrito</a>
+      <a href="admin.html" style="color:var(--rosa)"><i class="fas fa-lock" style="font-size:11px;margin-right:4px"></i>Admin</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="cart-btn" onclick="location.href='carrito.html'" aria-label="Carrito">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-badge" id="cartBadge">0</span>
+      </button>
+      <a href="https://wa.me/50686053613" target="_blank" class="btn-wa" rel="noopener">
+        <i class="fab fa-whatsapp"></i> Pedir
+      </a>
+      <button class="menu-btn" onclick="toggleMobileMenu()" aria-label="Menú">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav" id="mobileNav">
+  <a href="index.html">Inicio</a>
+  <a href="#catalogo" onclick="closeMobileMenu()">Catálogo</a>
+  <a href="carrito.html">🛍️ Carrito</a>
+  <a href="https://wa.me/50686053613" target="_blank" rel="noopener">💬 WhatsApp</a>
+  <a href="admin.html" class="admin-link"><i class="fas fa-lock" style="margin-right:6px"></i>Panel Admin</a>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="hero" id="inicio">
+  <div class="hero-bg">
+    <img src="fondo-floristeria.jpg" alt="Flores frescas Floristería Santa Bárbara" loading="eager"
+      onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#1a3828,#2D5A3D)'">
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge">💐 Desde 1997 en Santa Bárbara, Heredia</div>
+    <h2>Flores que cuentan<br><em>tu historia</em></h2>
+    <p>Arreglos frescos seleccionados a mano para tus momentos especiales. Entrega el mismo día en Santa Bárbara y zonas cercanas.</p>
+    <div class="hero-btns">
+      <a href="#catalogo" class="btn-primary">Ver Catálogo <i class="fas fa-arrow-down"></i></a>
+      <a href="https://wa.me/50686053613" target="_blank" rel="noopener" class="btn-outline">
+        <i class="fab fa-whatsapp" style="color:#4ADE80"></i> WhatsApp Directo
+      </a>
+    </div>
+    <div class="badges-row">
+      <span class="badge"><i class="fas fa-truck" style="color:#86EFAC"></i> Entrega el mismo día</span>
+      <span class="badge"><i class="fas fa-leaf" style="color:#86EFAC"></i> Flores frescas</span>
+      <span class="badge"><i class="fas fa-star" style="color:#FCD34D"></i> +25 años de experiencia</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FEATURES ─── -->
+<section class="features-section">
+  <div class="features-grid">
+    <div class="feature-item">
+      <i class="fas fa-truck-fast"></i>
+      <h4>Express a domicilio</h4>
+      <p>Calculamos el costo según tu ubicación en el mapa.</p>
+    </div>
+    <div class="feature-item">
+      <i class="fab fa-whatsapp"></i>
+      <h4>Pedido por WhatsApp</h4>
+      <p>Confirmación inmediata y atención personalizada.</p>
+    </div>
+    <div class="feature-item">
+      <i class="fas fa-store"></i>
+      <h4>Recoger en tienda</h4>
+      <p>Sin costo adicional. Santa Bárbara, Heredia.</p>
+    </div>
+    <div class="feature-item">
+      <i class="fas fa-mobile-alt"></i>
+      <h4>SINPE Móvil</h4>
+      <p>Pago fácil y seguro al 8605-3613.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CATÁLOGO ─── -->
+<section id="catalogo" class="catalogo-section">
+  <div class="section-header">
+    <span class="section-label">🌺 Catálogo</span>
+    <h2>Nuestros Arreglos</h2>
+    <p>Elige por categoría o explora todos nuestros arreglos frescos</p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-wrap" id="filtrosWrap" style="display:none">
+    <button class="filtro-btn active" data-cat="todos" onclick="filtrar('todos')">
+      <i class="fas fa-border-all"></i> Todos
+    </button>
+    <!-- categorías se inyectan aquí -->
+  </div>
+
+  <!-- Skeletons -->
+  <div class="skeleton-grid" id="skeletonGrid">
+    <div class="skeleton-card" style="height:340px">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-line" style="margin-top:14px"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+    </div>
+    <div class="skeleton-card" style="height:340px">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-line" style="margin-top:14px"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+    </div>
+    <div class="skeleton-card" style="height:340px">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-line" style="margin-top:14px"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+    </div>
+    <div class="skeleton-card" style="height:340px">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-line" style="margin-top:14px"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+    </div>
+  </div>
+
+  <!-- Grid real -->
+  <div class="productos-grid" id="productosGrid" style="display:none"></div>
+
+  <!-- Empty -->
+  <div class="empty-state" id="emptyState" style="display:none">
+    <i class="fas fa-seedling"></i>
+    <p>No hay productos en este momento.</p>
+    <a href="admin.html" style="color:var(--verde);font-weight:600;margin-top:12px;display:inline-block">Ir al Panel Admin →</a>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <h3>🌸 Santa Bárbara</h3>
+      <p>Llevamos más de 25 años llevando alegría a través de flores frescas. Cada arreglo es hecho con amor y cuidado.</p>
+    </div>
+    <div>
+      <h4>Navegación</h4>
+      <ul>
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="#catalogo">Catálogo</a></li>
+        <li><a href="carrito.html">Carrito</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Horario</h4>
+      <ul>
+        <li><a>Lun–Sáb: 7am – 7pm</a></li>
+        <li><a>Dom: 8am – 2pm</a></li>
+        <li><a>Express: Todos los días</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contacto</h4>
+      <ul class="footer-contact">
+        <li><i class="fab fa-whatsapp"></i><span>8605-3613</span></li>
+        <li><i class="fas fa-envelope"></i><span>info@floristeriasb.com</span></li>
+        <li><i class="fas fa-map-marker-alt"></i><span>Santa Bárbara, Heredia</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Floristería Santa Bárbara. Todos los derechos reservados.</span>
+    <a href="admin.html"><i class="fas fa-lock" style="margin-right:4px"></i>Panel Admin</a>
+  </div>
+</footer>
+
+<!-- WhatsApp Flotante -->
+<a href="https://wa.me/50686053613" target="_blank" rel="noopener" class="wa-float" aria-label="WhatsApp">
+  <i class="fab fa-whatsapp"></i>
+</a>
+
+<!-- Modal Imagen -->
+<div class="img-modal" id="imgModal" role="dialog" aria-modal="true">
+  <button class="img-modal-close" onclick="cerrarModal()" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+  <img id="imgModalSrc" src="" alt="Vista ampliada del producto">
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <i class="fas fa-check-circle"></i>
+  <span id="toastMsg">¡Agregado al carrito!</span>
+</div>
+
+<script>
+  // ============================================
+  // CONSTANTES
+  // ============================================
+  const STORAGE_KEY = 'floristeria_completa';
+  const CART_KEY    = 'sb_carrito';
+
+  let productos  = [];
+  let categorias = [];
+  let catActual  = 'todos';
+
+  // ============================================
+  // CARGA DEL CATÁLOGO
+  // ============================================
+  async function cargarDatos() {
+    // 1) Intenta catalogo.json público (clientes y dueña via GitHub)
+    try {
+      const res = await fetch('catalogo.json?v=' + Date.now());
+      if (res.ok) {
+        const data = await res.json();
+        productos  = (data.productos  || []).filter(p => p.activo !== false);
+        categorias = (data.categorias || []).filter(c => c.activa !== false);
+      }
+    } catch (_) {}
+
+    // 2) Fallback a localStorage (cuando se edita localmente)
+    if (!productos.length) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        productos  = (saved.productos  || []).filter(p => p.activo !== false);
+        categorias = (saved.categorias || []).filter(c => c.activa !== false);
+      } catch (_) {}
+    }
+
+    renderizar();
+    actualizarBadge();
+  }
+
+  // ============================================
+  // RENDER
+  // ============================================
+  function renderizar() {
+    document.getElementById('skeletonGrid').style.display = 'none';
+
+    if (!productos.length) {
+      document.getElementById('emptyState').style.display = 'block';
+      return;
+    }
+
+    // Filtros
+    const wrap = document.getElementById('filtrosWrap');
+    wrap.style.display = 'flex';
+    // Limpiar botones de categorías (mantener "Todos")
+    wrap.querySelectorAll('[data-cat]:not([data-cat="todos"])').forEach(b => b.remove());
+    categorias.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'filtro-btn';
+      btn.dataset.cat = c.id;
+      btn.innerHTML = `${c.icono||'📦'} ${c.nombre}`;
+      btn.onclick = () => filtrar(c.id);
+      wrap.appendChild(btn);
+    });
+
+    filtrar('todos');
+  }
+
+  function filtrar(cat) {
+    catActual = cat;
+    document.querySelectorAll('.filtro-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.cat === cat);
+    });
+
+    const lista = cat === 'todos' ? productos : productos.filter(p => p.categoria === cat);
+    const grid  = document.getElementById('productosGrid');
+    grid.style.display = 'grid';
+
+    if (!lista.length) {
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gris)">No hay productos en esta categoría.</p>';
+      return;
+    }
+
+    grid.innerHTML = lista.map(p => {
+      const precio    = (p.precioTemporadaActivo && p.precioTemporada) ? p.precioTemporada : p.precioRegular;
+      const imgSrc    = (p.imagenes && p.imagenes[0]) ? p.imagenes[0] : 'https://placehold.co/400x400/EEE8DC/2D5A3D?text=Flor';
+      const badgeOff  = p.precioTemporadaActivo  ? '<span class="card-badge-oferta">OFERTA</span>' : '';
+      const badgeDest = p.destacado ? '<span class="card-badge-dest">⭐ Destacado</span>' : '';
+      return `
+        <div class="producto-card" role="article" aria-label="${p.nombre}">
+          <div class="card-img-wrap">
+            <img src="${imgSrc}" alt="${p.nombre}" loading="lazy"
+              onerror="this.src='https://placehold.co/400x400/EEE8DC/2D5A3D?text=Flor'">
+            ${badgeOff}${badgeDest}
+            <button class="card-zoom-btn" onclick="abrirModal('${imgSrc}')" aria-label="Ampliar imagen">
+              <i class="fas fa-search-plus"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <p class="card-codigo">${p.codigo || ''}</p>
+            <h3 class="card-nombre">${p.nombre}</h3>
+            <p class="card-desc">${p.descripcion || ''}</p>
+            <div class="card-precio-row">
+              <span class="card-precio">₡${precio.toLocaleString('es-CR')}</span>
+              ${p.precioTemporadaActivo && p.precioRegular
+                ? `<span class="card-precio-tachado">₡${p.precioRegular.toLocaleString('es-CR')}</span>` : ''}
+            </div>
+            <button class="btn-agregar" onclick="agregarCarrito('${p.id}', this)" aria-label="Agregar ${p.nombre} al carrito">
+              <i class="fas fa-shopping-bag"></i> Agregar
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ============================================
+  // CARRITO
+  // ============================================
+  function agregarCarrito(id, btn) {
+    const prod = productos.find(p => p.id === id);
+    if (!prod) return;
+    const precio = (prod.precioTemporadaActivo && prod.precioTemporada) ? prod.precioTemporada : prod.precioRegular;
+    let carrito  = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    const idx    = carrito.findIndex(i => i.id === id);
+
+    if (idx > -1) {
+      carrito[idx].cantidad++;
+      carrito[idx].subtotal = carrito[idx].cantidad * precio;
+    } else {
+      carrito.push({
+        id, nombre: prod.nombre,
+        precioUnitario: precio,
+        imagen: (prod.imagenes && prod.imagenes[0]) || '',
+        cantidad: 1, subtotal: precio
+      });
+    }
+    localStorage.setItem(CART_KEY, JSON.stringify(carrito));
+    actualizarBadge();
+    mostrarToast(`✓ ${prod.nombre} agregado`);
+
+    const origHTML = btn.innerHTML;
+    btn.innerHTML  = '<i class="fas fa-check"></i> ¡Agregado!';
+    btn.classList.add('added');
+    setTimeout(() => { btn.innerHTML = origHTML; btn.classList.remove('added'); }, 1600);
+  }
+
+  function actualizarBadge() {
+    const carrito = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    const total   = carrito.reduce((s,i) => s + i.cantidad, 0);
+    const badge   = document.getElementById('cartBadge');
+    badge.textContent = total;
+    badge.style.display = total ? 'flex' : 'none';
+  }
+
+  // ============================================
+  // MODAL IMAGEN
+  // ============================================
+  function abrirModal(src) {
+    document.getElementById('imgModalSrc').src = src;
+    document.getElementById('imgModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function cerrarModal() {
+    document.getElementById('imgModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('imgModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) cerrarModal();
+  });
+
+  // ============================================
+  // TOAST
+  // ============================================
+  function mostrarToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ============================================
+  // MENÚ MÓVIL
+  // ============================================
+  function toggleMobileMenu() {
+    document.getElementById('mobileNav').classList.toggle('open');
+  }
+  function closeMobileMenu() {
+    document.getElementById('mobileNav').classList.remove('open');
+  }
+
+  // ============================================
+  // INIT
+  // ============================================
+  document.addEventListener('DOMContentLoaded', cargarDatos);
+</script>
+</body>
+</html>
