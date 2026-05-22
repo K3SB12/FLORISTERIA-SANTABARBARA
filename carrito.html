@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrito y Pedido | Floristería Santa Bárbara</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Leaflet CSS cargado siempre pero JS solo si se necesita -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <style>
+    :root{
+      --verde:#2D5A3D; --verde-claro:#4A7C59;
+      --crema:#F9F5EE; --crema-dark:#EEE8DC;
+      --rosa:#C41E3A; --rosa-suave:#E8B4B8;
+      --oscuro:#1A1A1A; --gris:#6B7280;
+      --blanco:#fff; --radio:14px;
+      --sombra:0 4px 24px rgba(45,90,61,.1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--crema);color:var(--oscuro);min-height:100vh;}
+
+    /* HEADER */
+    header{
+      position:fixed;top:0;left:0;right:0;z-index:100;
+      background:rgba(249,245,238,.95);backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(45,90,61,.1);
+    }
+    .header-inner{
+      max-width:960px;margin:0 auto;padding:0 20px;
+      display:flex;align-items:center;justify-content:space-between;height:64px;
+    }
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .logo-emoji{font-size:26px;}
+    .logo h1{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--verde);}
+    .back-link{
+      display:flex;align-items:center;gap:6px;
+      color:var(--verde);font-size:14px;font-weight:500;
+      text-decoration:none;transition:gap .2s;
+    }
+    .back-link:hover{gap:10px;}
+
+    /* MAIN */
+    main{padding-top:80px;max-width:960px;margin:0 auto;padding-left:20px;padding-right:20px;padding-bottom:60px;}
+    .page-title{
+      font-family:'Cormorant Garamond',serif;
+      font-size:clamp(28px,5vw,42px);font-weight:600;
+      text-align:center;margin:28px 0 32px;color:var(--oscuro);
+    }
+
+    /* STEPPER */
+    .stepper{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:36px;}
+    .step{
+      display:flex;align-items:center;gap:8px;
+    }
+    .step-num{
+      width:36px;height:36px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:14px;font-weight:700;border:2px solid #D1D5DB;
+      color:var(--gris);background:var(--blanco);transition:all .3s;
+    }
+    .step-num.active{background:var(--verde);border-color:var(--verde);color:#fff;}
+    .step-num.done{background:var(--verde-claro);border-color:var(--verde-claro);color:#fff;}
+    .step-label{font-size:13px;font-weight:500;color:var(--gris);transition:color .3s;}
+    .step-label.active{color:var(--verde);}
+    .step-sep{width:40px;height:2px;background:#E5E7EB;margin:0 4px;}
+    .step-sep.done{background:var(--verde-claro);}
+
+    /* PANEL */
+    .panel{
+      background:var(--blanco);border-radius:var(--radio);
+      box-shadow:var(--sombra);border:1px solid rgba(0,0,0,.06);
+      padding:28px;margin-bottom:20px;
+      animation:fadeIn .3s ease-out;
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .panel-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:20px;}
+
+    /* CARRITO ITEMS */
+    .item-row{
+      display:flex;align-items:center;gap:14px;
+      padding:14px;border-radius:10px;
+      background:var(--crema);margin-bottom:10px;
+      transition:box-shadow .2s;
+    }
+    .item-row:hover{box-shadow:0 2px 12px rgba(0,0,0,.08);}
+    .item-img{
+      width:68px;height:68px;object-fit:cover;
+      border-radius:8px;border:1px solid rgba(0,0,0,.08);flex-shrink:0;
+    }
+    .item-info{flex:1;min-width:0;}
+    .item-nombre{font-weight:600;font-size:14px;margin-bottom:3px;}
+    .item-precio{color:var(--verde);font-weight:700;font-size:14px;}
+    .qty-ctrl{display:flex;align-items:center;gap:0;border:1.5px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-top:6px;}
+    .qty-btn{
+      width:30px;height:30px;background:none;border:none;
+      cursor:pointer;font-size:16px;color:var(--gris);
+      transition:background .2s;display:flex;align-items:center;justify-content:center;
+    }
+    .qty-btn:hover{background:var(--crema-dark);}
+    .qty-val{padding:0 10px;font-size:13px;font-weight:600;color:var(--oscuro);}
+    .item-subtotal{font-weight:700;font-size:15px;margin-left:auto;white-space:nowrap;}
+    .item-del{
+      background:none;border:none;cursor:pointer;
+      color:#D1D5DB;font-size:16px;padding:6px;
+      transition:color .2s;flex-shrink:0;
+    }
+    .item-del:hover{color:var(--rosa);}
+
+    /* RESUMEN TOTALES */
+    .totales{
+      background:var(--crema);border-radius:10px;
+      padding:16px 18px;border:1px solid var(--crema-dark);
+    }
+    .total-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:8px;}
+    .total-row.final{font-size:18px;font-weight:700;color:var(--verde);margin-top:10px;padding-top:12px;border-top:2px solid rgba(0,0,0,.08);}
+
+    /* EMPTY CARRITO */
+    .carrito-vacio{text-align:center;padding:48px 20px;color:var(--gris);}
+    .carrito-vacio i{font-size:48px;margin-bottom:14px;opacity:.25;display:block;}
+    .carrito-vacio p{margin-bottom:16px;}
+
+    /* FORMULARIO */
+    .form-section{
+      background:var(--crema);border-radius:10px;
+      padding:16px 18px;margin-bottom:14px;
+      border:1.5px solid var(--crema-dark);
+    }
+    .form-section-title{
+      font-size:13px;font-weight:700;text-transform:uppercase;
+      letter-spacing:.06em;color:var(--verde);margin-bottom:12px;
+      display:flex;align-items:center;gap:6px;
+    }
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .form-group{display:flex;flex-direction:column;gap:5px;}
+    .form-group.full{grid-column:1/-1;}
+    label{font-size:12px;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.04em;}
+    input,select,textarea{
+      width:100%;padding:11px 14px;font-size:14px;
+      border:1.5px solid #E5E7EB;border-radius:8px;
+      font-family:'DM Sans',sans-serif;color:var(--oscuro);background:var(--blanco);
+      transition:border-color .2s,box-shadow .2s;
+      -webkit-appearance:none;
+    }
+    input:focus,select:focus,textarea:focus{
+      outline:none;border-color:var(--verde);
+      box-shadow:0 0 0 3px rgba(45,90,61,.1);
+    }
+    input.error{border-color:var(--rosa);}
+    .check-mismo{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--gris);margin-bottom:10px;}
+    .check-mismo input{width:auto;padding:0;border:none;box-shadow:none;}
+
+    /* TIPO DE ENTREGA */
+    .entrega-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .entrega-opt{position:relative;cursor:pointer;}
+    .entrega-opt input[type=radio]{
+      position:absolute;opacity:0;width:0;height:0;
+    }
+    .entrega-card{
+      border:2px solid #E5E7EB;border-radius:12px;
+      padding:16px;text-align:center;
+      transition:all .25s;
+    }
+    .entrega-opt input[type=radio]:checked ~ .entrega-card{
+      border-color:var(--verde);background:rgba(45,90,61,.05);
+      box-shadow:0 4px 14px rgba(45,90,61,.15);
+    }
+    .entrega-card i{font-size:28px;color:var(--verde);margin-bottom:8px;display:block;}
+    .entrega-card h4{font-size:14px;font-weight:600;margin-bottom:4px;}
+    .entrega-card p{font-size:12px;color:var(--gris);}
+    /* El indicador de check en esquina */
+    .entrega-indicator{
+      position:absolute;top:10px;right:10px;
+      width:20px;height:20px;border-radius:50%;
+      border:2px solid #D1D5DB;
+      background:transparent;
+      transition:all .25s;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .entrega-opt input[type=radio]:checked ~ .entrega-indicator{
+      background:var(--verde);border-color:var(--verde);
+    }
+    .entrega-indicator::after{
+      content:'✓';color:#fff;font-size:11px;font-weight:700;
+      opacity:0;transition:opacity .2s;
+    }
+    .entrega-opt input[type=radio]:checked ~ .entrega-indicator::after{
+      opacity:1;
+    }
+
+    /* MAPA */
+    #mapSection{margin-top:14px;}
+    #mapLoadingMsg{
+      background:var(--crema);border:1px solid var(--crema-dark);
+      border-radius:10px;padding:20px;text-align:center;
+      color:var(--gris);font-size:14px;
+    }
+    #mapLoadingMsg i{font-size:28px;margin-bottom:8px;display:block;color:var(--verde);}
+    #map{height:320px;border-radius:10px;border:1.5px solid #E5E7EB;display:none;}
+    #mapErrorMsg{
+      display:none;background:#FEF2F2;border:1px solid #FECACA;
+      border-radius:10px;padding:14px;color:#991B1B;font-size:13px;
+    }
+    #infoDistancia{
+      display:none;background:var(--crema);border:1px solid var(--crema-dark);
+      border-radius:10px;padding:14px 16px;margin-top:10px;
+    }
+    .dist-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;}
+    .dist-total{display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:var(--verde);}
+    .dir-manual{margin-top:10px;}
+    .dir-manual-info{
+      background:#FFFBEB;border:1px solid #FDE68A;
+      border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:13px;color:#92400E;
+    }
+    #infoRecogida{
+      display:none;background:var(--crema);border-radius:10px;
+      padding:20px;text-align:center;border:1px solid var(--crema-dark);margin-top:14px;
+    }
+    #infoRecogida i{font-size:32px;color:var(--verde);margin-bottom:8px;display:block;}
+
+    /* PAGO */
+    .pago-opts{display:flex;flex-direction:column;gap:10px;}
+    .pago-opt{
+      display:flex;align-items:center;gap:14px;
+      padding:14px;border-radius:10px;border:1.5px solid #E5E7EB;cursor:pointer;
+      transition:border-color .2s,background .2s;
+    }
+    .pago-opt:has(input:checked){border-color:var(--verde);background:rgba(45,90,61,.04);}
+    .pago-opt input[type=radio]{accent-color:var(--verde);width:18px;height:18px;flex-shrink:0;}
+    .pago-opt-icon{font-size:22px;color:var(--verde);}
+    .pago-opt-info{flex:1;}
+    .pago-opt-info strong{font-size:14px;display:block;margin-bottom:2px;}
+    .pago-opt-info span{font-size:12px;color:var(--gris);}
+    .pago-opt.disabled{opacity:.45;pointer-events:none;}
+
+    /* RESUMEN CONFIRMACIÓN */
+    .resumen-productos{max-height:220px;overflow-y:auto;margin-bottom:12px;}
+    .resumen-item{
+      display:flex;justify-content:space-between;
+      align-items:center;padding:8px 0;
+      border-bottom:1px solid var(--crema-dark);font-size:13px;
+    }
+    .resumen-item:last-child{border:none;}
+    .resumen-item-left{display:flex;align-items:center;gap:8px;}
+    .resumen-qty-badge{
+      background:var(--verde);color:#fff;
+      font-size:10px;font-weight:700;
+      padding:2px 7px;border-radius:10px;
+    }
+    .resumen-entrega-box{
+      background:var(--crema);border-radius:10px;padding:14px 16px;
+      font-size:13px;color:var(--oscuro);margin-bottom:16px;
+    }
+    .resumen-entrega-box strong{font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;}
+    .resumen-row{margin-bottom:6px;}
+    .tag-mismo{
+      display:inline-block;background:#E5E7EB;
+      color:var(--gris);font-size:11px;padding:2px 8px;border-radius:8px;margin-left:4px;
+    }
+    .checkbox-label{
+      display:flex;align-items:flex-start;gap:10px;
+      cursor:pointer;font-size:13px;color:var(--gris);line-height:1.5;
+    }
+    .checkbox-label input{margin-top:2px;accent-color:var(--verde);width:16px;height:16px;}
+    .email-copy-section{
+      background:#FFFBEB;border:1px solid #FDE68A;
+      border-radius:10px;padding:14px;margin-bottom:14px;
+    }
+
+    /* BOTONES NAVEGACIÓN */
+    .btn-nav-row{display:flex;gap:10px;margin-top:20px;}
+    .btn-back{
+      flex:1;padding:13px;border:1.5px solid #E5E7EB;
+      background:var(--blanco);color:var(--gris);font-size:14px;font-weight:600;
+      border-radius:10px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      transition:background .2s;
+    }
+    .btn-back:hover{background:var(--crema);}
+    .btn-next{
+      flex:2;padding:13px;
+      background:var(--verde);color:#fff;font-size:14px;font-weight:700;
+      border:none;border-radius:10px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      box-shadow:0 4px 14px rgba(45,90,61,.25);
+      transition:background .2s,transform .15s;
+    }
+    .btn-next:hover{background:var(--verde-claro);transform:translateY(-1px);}
+    .btn-next:disabled{background:#9CA3AF;box-shadow:none;transform:none;cursor:not-allowed;}
+    .btn-vaciar{
+      background:none;border:none;cursor:pointer;
+      color:var(--rosa);font-size:13px;font-weight:500;
+      padding:6px 10px;border-radius:6px;transition:background .2s;
+    }
+    .btn-vaciar:hover{background:#FFF1F2;}
+    .btn-enviar{
+      width:100%;padding:16px;
+      background:#16A34A;color:#fff;
+      font-size:16px;font-weight:700;
+      border:none;border-radius:12px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      box-shadow:0 6px 20px rgba(22,163,74,.35);
+      transition:background .2s,transform .15s;
+    }
+    .btn-enviar:hover{background:#15803D;transform:translateY(-1px);}
+    .btn-enviar:disabled{background:#9CA3AF;box-shadow:none;transform:none;cursor:not-allowed;}
+    .btn-enviar i{font-size:22px;}
+
+    /* MODAL WHATSAPP */
+    .modal-overlay{
+      display:none;position:fixed;inset:0;z-index:500;
+      background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+      align-items:center;justify-content:center;padding:16px;
+    }
+    .modal-overlay.open{display:flex;}
+    .modal-box{
+      background:var(--blanco);border-radius:20px;
+      box-shadow:0 24px 60px rgba(0,0,0,.25);
+      max-width:400px;width:100%;padding:28px;position:relative;
+      animation:fadeIn .3s ease-out;
+    }
+    .modal-close{
+      position:absolute;top:14px;right:14px;
+      background:none;border:none;cursor:pointer;
+      font-size:20px;color:var(--gris);padding:4px;
+    }
+    .modal-icon{
+      width:60px;height:60px;background:#DCFCE7;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:28px;margin:0 auto 16px;
+    }
+    .modal-title{text-align:center;font-weight:700;font-size:18px;margin-bottom:6px;}
+    .modal-sub{text-align:center;font-size:13px;color:var(--gris);margin-bottom:20px;}
+    .modal-btns{display:flex;flex-direction:column;gap:8px;}
+    .modal-btn{
+      width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;
+      font-size:14px;font-weight:600;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      transition:background .2s;
+    }
+    .modal-btn.wa-app{background:#25D366;color:#fff;}
+    .modal-btn.wa-app:hover{background:#1ebe5d;}
+    .modal-btn.wa-web{background:#F3F4F6;color:var(--oscuro);}
+    .modal-btn.wa-web:hover{background:#E5E7EB;}
+    .modal-btn.copy-btn{background:var(--blanco);color:var(--verde);border:1.5px solid var(--verde);}
+    .modal-btn.copy-btn:hover{background:rgba(45,90,61,.05);}
+    .modal-sep{display:flex;align-items:center;gap:8px;font-size:12px;color:#9CA3AF;margin:4px 0;}
+    .modal-sep::before,.modal-sep::after{content:'';flex:1;height:1px;background:#E5E7EB;}
+
+    /* TOAST */
+    .toast{
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(30px);
+      background:var(--oscuro);color:#fff;font-size:13px;font-weight:500;
+      padding:10px 18px;border-radius:20px;
+      display:flex;align-items:center;gap:8px;
+      box-shadow:0 8px 28px rgba(0,0,0,.2);
+      opacity:0;transition:opacity .3s,transform .3s;
+      z-index:600;pointer-events:none;white-space:nowrap;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .toast.error i{color:#F87171;}
+    .toast.ok i{color:#4ADE80;}
+
+    @media(max-width:600px){
+      .form-row{grid-template-columns:1fr;}
+      .entrega-opts{grid-template-columns:1fr;}
+      .btn-nav-row{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-emoji">🌸</span>
+      <h1>Santa Bárbara</h1>
+    </a>
+    <a href="index.html" class="back-link">
+      <i class="fas fa-arrow-left"></i> <span class="hide-xs">Seguir comprando</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Finalizar tu pedido</h1>
+
+  <!-- STEPPER -->
+  <div class="stepper" id="stepper">
+    <div class="step">
+      <div class="step-num active" id="sn1">1</div>
+      <span class="step-label active" id="sl1">Carrito</span>
+    </div>
+    <div class="step-sep" id="ss12"></div>
+    <div class="step">
+      <div class="step-num" id="sn2">2</div>
+      <span class="step-label" id="sl2">Entrega</span>
+    </div>
+    <div class="step-sep" id="ss23"></div>
+    <div class="step">
+      <div class="step-num" id="sn3">3</div>
+      <span class="step-label" id="sl3">Confirmar</span>
+    </div>
+  </div>
+
+  <!-- ═══ PASO 1: CARRITO ═══ -->
+  <div id="step1Content">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 class="panel-title" style="margin:0">🛍️ Tu carrito</h2>
+        <button class="btn-vaciar" onclick="vaciarCarrito()"><i class="fas fa-trash" style="margin-right:4px"></i>Vaciar</button>
+      </div>
+
+      <div id="carritoItems"></div>
+
+      <div id="carritoVacio" class="carrito-vacio" style="display:none">
+        <i class="fas fa-shopping-bag"></i>
+        <p>Tu carrito está vacío</p>
+        <a href="index.html" style="color:var(--verde);font-weight:600">Ver catálogo →</a>
+      </div>
+
+      <div id="resumenCarrito" class="totales" style="margin-top:16px">
+        <div class="total-row"><span>Subtotal:</span><span id="subtotal">₡0</span></div>
+        <div class="total-row" id="filaExpress" style="display:none">
+          <span>Envío express:</span><span id="costoExpressDisplay">₡0</span>
+        </div>
+        <div class="total-row final"><span>Total:</span><span id="totalFinal">₡0</span></div>
+      </div>
+    </div>
+
+    <button class="btn-next" id="btnContinuar" onclick="irAPaso(2)" style="width:100%">
+      Continuar <i class="fas fa-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- ═══ PASO 2: DATOS DE ENTREGA ═══ -->
+  <div id="step2Content" style="display:none">
+    <div class="panel">
+      <h2 class="panel-title">📋 Datos de entrega</h2>
+
+      <!-- Quien compra -->
+      <div class="form-section">
+        <p class="form-section-title"><i class="fas fa-user"></i> Quien compra</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nombreComprador">Nombre completo *</label>
+            <input type="text" id="nombreComprador" placeholder="Ej: María Fernández" autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="telefonoComprador">Teléfono *</label>
+            <input type="tel" id="telefonoComprador" placeholder="8888-8888" autocomplete="tel" maxlength="9">
+          </div>
+        </div>
+      </div>
+
+      <!-- Quien recibe -->
+      <div class="form-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <p class="form-section-title" style="margin:0"><i class="fas fa-gift"></i> Quien recibe</p>
+          <label class="check-mismo">
+            <input type="checkbox" id="mismoReceptor" onchange="toggleReceptor()">
+            <span>Es la misma persona</span>
+          </label>
+        </div>
+        <div id="datosReceptorDiv" class="form-row">
+          <div class="form-group">
+            <label for="nombreReceptor">Nombre *</label>
+            <input type="text" id="nombreReceptor" placeholder="Ej: Ana López" autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="telefonoReceptor">Teléfono *</label>
+            <input type="tel" id="telefonoReceptor" placeholder="7777-7777" autocomplete="tel" maxlength="9">
+          </div>
+        </div>
+      </div>
+
+      <!-- Fecha y horario -->
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group">
+          <label for="fecha">Fecha de entrega *</label>
+          <input type="date" id="fecha">
+        </div>
+        <div class="form-group">
+          <label for="horario">Horario preferido</label>
+          <select id="horario">
+            <option value="cualquiera">Cualquier horario</option>
+            <option value="manana">Mañana (8am–12pm)</option>
+            <option value="tarde">Tarde (12pm–6pm)</option>
+            <option value="noche">Noche (6pm+)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Mensaje tarjeta -->
+      <div class="form-group" style="margin-bottom:14px">
+        <label for="mensajeTarjeta">Mensaje para la tarjeta (opcional)</label>
+        <textarea id="mensajeTarjeta" rows="2" placeholder="Ej: Feliz cumpleaños, te quiero mucho…" maxlength="200"></textarea>
+        <span style="font-size:11px;color:var(--gris);text-align:right;display:block;margin-top:3px"><span id="charCount">0</span>/200</span>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="form-group" style="margin-bottom:20px">
+        <label for="observaciones">Observaciones / instrucciones especiales</label>
+        <textarea id="observaciones" rows="2" placeholder="Ej: Tocar timbre, dejar en portería…"></textarea>
+      </div>
+
+      <!-- Tipo de entrega -->
+      <p class="form-section-title"><i class="fas fa-truck"></i> Tipo de entrega</p>
+      <div class="entrega-opts">
+        <!-- Recogida -->
+        <label class="entrega-opt">
+          <input type="radio" name="tipoEntrega" value="recogida" onchange="toggleEntrega()">
+          <div class="entrega-card">
+            <i class="fas fa-store"></i>
+            <h4>Recoger en tienda</h4>
+            <p>Sin costo adicional</p>
+          </div>
+          <div class="entrega-indicator"></div>
+        </label>
+        <!-- Express -->
+        <label class="entrega-opt">
+          <input type="radio" name="tipoEntrega" value="express" onchange="toggleEntrega()" checked>
+          <div class="entrega-card">
+            <i class="fas fa-truck-fast"></i>
+            <h4>Express a domicilio</h4>
+            <p>₡650 por km</p>
+          </div>
+          <div class="entrega-indicator"></div>
+        </label>
+      </div>
+
+      <!-- Sección Express -->
+      <div id="seccionExpress" style="margin-top:16px">
+        <div class="dir-manual">
+          <div class="dir-manual-info">
+            <i class="fas fa-info-circle" style="margin-right:6px"></i>
+            <strong>Selecciona tu ubicación en el mapa</strong> o ingresa la dirección abajo para continuar sin mapa.
+          </div>
+          <div class="form-group" style="margin-bottom:8px">
+            <label for="direccionTexto">Dirección como referencia (sin mapa)</label>
+            <input type="text" id="direccionTexto" placeholder="Ej: De la iglesia 200m sur, casa color verde…">
+          </div>
+          <button onclick="usarDireccionTexto()" style="
+            background:none;border:1.5px solid var(--verde);color:var(--verde);
+            padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;
+            display:flex;align-items:center;gap:6px;width:100%;justify-content:center;
+          ">
+            <i class="fas fa-map-pin"></i> Usar esta dirección (sin mapa)
+          </button>
+        </div>
+
+        <div id="mapSection" style="margin-top:14px">
+          <div id="mapLoadingMsg">
+            <i class="fas fa-map-marked-alt"></i>
+            Cargando mapa… <span style="font-size:12px;display:block;margin-top:4px;opacity:.7">Puede tardar unos segundos según la conexión.</span>
+            <button onclick="inicializarMapa()" style="
+              margin-top:10px;background:var(--verde);color:#fff;
+              border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-size:13px;
+            ">Cargar mapa</button>
+          </div>
+          <div id="map"></div>
+          <div id="mapErrorMsg">
+            <i class="fas fa-exclamation-triangle" style="margin-right:6px"></i>
+            Error al cargar el mapa. Usa la dirección de texto arriba.
+            <button onclick="recargarMapa()" style="margin-left:10px;background:none;border:none;cursor:pointer;color:var(--rosa);font-weight:600;">Reintentar</button>
+          </div>
+        </div>
+
+        <div id="infoDistancia">
+          <div class="dist-row"><span>Distancia estimada:</span><span id="distanciaTexto" style="font-weight:600">—</span></div>
+          <div class="dist-total"><span>Costo envío:</span><span id="costoExpress">₡0</span></div>
+          <p style="font-size:11px;color:var(--gris);margin-top:6px">* Distancia en línea recta. Puede variar.</p>
+        </div>
+
+        <div class="form-group" style="margin-top:12px">
+          <label for="referencias">Dirección completa y señas *</label>
+          <textarea id="referencias" rows="3" placeholder="Ej: Condominio Las Flores, torre 3, apt 502. Portón negro, timbre 502."></textarea>
+        </div>
+      </div>
+
+      <!-- Sección Recogida -->
+      <div id="infoRecogida">
+        <i class="fas fa-map-marker-alt"></i>
+        <h3 style="font-weight:600;margin-bottom:6px">Recogida en tienda</h3>
+        <p style="font-size:13px;color:var(--gris);margin-bottom:10px">
+          Santa Bárbara, Heredia, Costa Rica<br>Del parque 200m al sur<br>
+          <span style="font-size:12px">Lun–Sáb: 8am–6pm</span>
+        </p>
+        <a href="https://maps.google.com/?q=10.0369,-84.1594" target="_blank" rel="noopener"
+          style="color:var(--verde);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px">
+          <i class="fas fa-external-link-alt"></i> Ver en Google Maps
+        </a>
+      </div>
+    </div>
+
+    <div class="btn-nav-row">
+      <button class="btn-back" onclick="irAPaso(1)"><i class="fas fa-arrow-left"></i> Volver</button>
+      <button class="btn-next" onclick="irAPaso(3)">Revisar pedido <i class="fas fa-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══ PASO 3: CONFIRMACIÓN ═══ -->
+  <div id="step3Content" style="display:none">
+    <div class="panel">
+      <h2 class="panel-title" style="text-align:center">✅ Confirma tu pedido</h2>
+
+      <!-- Productos resumen -->
+      <div class="form-section">
+        <p class="form-section-title"><i class="fas fa-shopping-bag"></i> Productos</p>
+        <div class="resumen-productos" id="resumenProductos"></div>
+        <div class="totales">
+          <div class="total-row"><span>Subtotal:</span><span id="resumenSubtotal">₡0</span></div>
+          <div class="total-row" id="filaExpressResumen" style="display:none">
+            <span>Envío (<span id="resumenDistancia">—</span>):</span><span id="resumenExpress">₡0</span>
+          </div>
+          <div class="total-row final"><span>Total a pagar:</span><span id="resumenTotal">₡0</span></div>
+        </div>
+      </div>
+
+      <!-- Datos entrega resumen -->
+      <div class="resumen-entrega-box" id="resumenEntregaBox"></div>
+
+      <!-- Método de pago -->
+      <div class="form-section">
+        <p class="form-section-title"><i class="fas fa-credit-card"></i> Método de pago</p>
+        <div class="pago-opts">
+          <label class="pago-opt">
+            <input type="radio" name="pago" value="sinpe" checked>
+            <i class="fas fa-mobile-alt pago-opt-icon"></i>
+            <div class="pago-opt-info">
+              <strong>SINPE Móvil</strong>
+              <span>Al número <b>8605-3613</b></span>
+            </div>
+          </label>
+          <label class="pago-opt" id="pagoEfectivo">
+            <input type="radio" name="pago" value="efectivo">
+            <i class="fas fa-money-bill-wave pago-opt-icon"></i>
+            <div class="pago-opt-info">
+              <strong>Efectivo</strong>
+              <span>Solo disponible en recogida de tienda</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Email copia -->
+      <div class="email-copy-section">
+        <label class="checkbox-label">
+          <input type="checkbox" id="enviarEmail">
+          <div>
+            <strong style="font-size:13px;display:block;margin-bottom:3px">Recibir copia del pedido por email</strong>
+            <input type="email" id="emailCopia" placeholder="tu@email.com"
+              style="margin-top:6px;font-size:13px;" onclick="document.getElementById('enviarEmail').checked=true">
+          </div>
+        </label>
+      </div>
+
+      <!-- Términos -->
+      <label class="checkbox-label" style="margin-bottom:16px;padding:12px;border:1.5px solid var(--crema-dark);border-radius:10px;">
+        <input type="checkbox" id="terminos">
+        <span>Confirmo que los datos son correctos y entiendo que el pedido se procesará vía WhatsApp. Debo confirmar el pago para que sea válido. <strong style="color:var(--verde)">Acepto los términos.</strong></span>
+      </label>
+
+      <button class="btn-enviar" id="btnEnviar" onclick="enviarPedido()">
+        <i class="fab fa-whatsapp"></i>
+        <span>Enviar pedido por WhatsApp</span>
+      </button>
+      <p style="text-align:center;font-size:12px;color:var(--gris);margin-top:10px">
+        <i class="fas fa-lock" style="margin-right:4px"></i>Serás redirigido a WhatsApp con todos los detalles
+      </p>
+    </div>
+
+    <button class="btn-back" style="width:100%;margin-top:4px" onclick="irAPaso(2)">
+      <i class="fas fa-arrow-left"></i> Volver a datos de entrega
+    </button>
+  </div>
+</main>
+
+<!-- MODAL WHATSAPP -->
+<div class="modal-overlay" id="waModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="cerrarWaModal()"><i class="fas fa-times"></i></button>
+    <div class="modal-icon">💬</div>
+    <p class="modal-title">Enviar tu pedido</p>
+    <p class="modal-sub">Elige cómo quieres enviar el pedido</p>
+    <div class="modal-btns">
+      <button class="modal-btn wa-app" onclick="abrirWaApp()">
+        <i class="fab fa-whatsapp"></i> Abrir app de WhatsApp
+      </button>
+      <button class="modal-btn wa-web" onclick="abrirWaWeb()">
+        <i class="fas fa-desktop"></i> WhatsApp Web
+      </button>
+      <div class="modal-sep">o</div>
+      <button class="modal-btn copy-btn" onclick="copiarPedido()">
+        <i class="fas fa-copy"></i> Copiar texto del pedido
+      </button>
+    </div>
+    <p style="text-align:center;font-size:11px;color:var(--gris);margin-top:12px">
+      Si no se abre automáticamente, usa "Copiar texto" y pégalo en WhatsApp.
+    </p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="fas fa-check-circle"></i>
+  <span id="toastMsg">Mensaje</span>
+</div>
+
+<script>
+  // ============================================
+  // VARIABLES
+  // ============================================
+  const CART_KEY    = 'sb_carrito';
+  const DATA_KEY    = 'floristeria_completa';
+  const PEDIDOS_KEY = 'sb_pedidos_historial';
+
+  let carrito      = [];
+  let map          = null;
+  let marker       = null;
+  let leafletLoaded = false;
+  let pasoActual   = 1;
+  let costoExpress = 0;
+  let distanciaKm  = 0;
+  let usarDirManual = false;
+  let textoPedido  = '';
+
+  const FLORISTERIA = { lat: 10.034784, lng: -84.158785 };
+  let config = { whatsapp: '50686053613', tarifaExpress: 650 };
+
+  // ============================================
+  // INICIALIZACIÓN
+  // ============================================
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarConfig();
+    cargarCarrito();
+    setFechaMin();
+    document.getElementById('mensajeTarjeta')
+      .addEventListener('input', e => document.getElementById('charCount').textContent = e.target.value.length);
+    // Formateo automático teléfonos
+    ['telefonoComprador','telefonoReceptor'].forEach(id => {
+      document.getElementById(id).addEventListener('input', formatTel);
+    });
+    // Restaurar campos guardados
+    restaurarFormulario();
+    // Guardar campos en tiempo real
+    escucharFormulario();
+  });
+
+  function cargarConfig() {
+    try {
+      const d = JSON.parse(localStorage.getItem(DATA_KEY) || '{}');
+      if (d.config) config = { ...config, ...d.config };
+    } catch(_) {}
+  }
+
+  function setFechaMin() {
+    const hoy = new Date().toISOString().split('T')[0];
+    const f = document.getElementById('fecha');
+    f.min = hoy; f.value = hoy;
+  }
+
+  // ============================================
+  // FORMATEO TELÉFONO
+  // ============================================
+  function formatTel(e) {
+    let v = e.target.value.replace(/\D/g,'').slice(0,8);
+    if (v.length > 4) v = v.slice(0,4) + '-' + v.slice(4);
+    e.target.value = v;
+  }
+
+  // ============================================
+  // CARRITO
+  // ============================================
+  function cargarCarrito() {
+    carrito = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    const itemsEl  = document.getElementById('carritoItems');
+    const vacioEl  = document.getElementById('carritoVacio');
+    const resumenEl= document.getElementById('resumenCarrito');
+    const btnCont  = document.getElementById('btnContinuar');
+
+    if (!carrito.length) {
+      itemsEl.innerHTML = '';
+      vacioEl.style.display = 'block';
+      resumenEl.style.display = 'none';
+      btnCont.disabled = true;
+      return;
+    }
+    vacioEl.style.display = 'none';
+    resumenEl.style.display = 'block';
+    btnCont.disabled = false;
+
+    itemsEl.innerHTML = carrito.map((item, i) => `
+      <div class="item-row">
+        <img class="item-img" src="${item.imagen||''}" alt="${item.nombre}"
+          onerror="this.src='https://placehold.co/68x68/EEE8DC/2D5A3D?text=Flor'">
+        <div class="item-info">
+          <p class="item-nombre">${item.nombre}</p>
+          <p class="item-precio">₡${item.precioUnitario.toLocaleString('es-CR')}</p>
+          <div class="qty-ctrl">
+            <button class="qty-btn" onclick="cambiarQty(${i},-1)">−</button>
+            <span class="qty-val">${item.cantidad}</span>
+            <button class="qty-btn" onclick="cambiarQty(${i},1)">+</button>
+          </div>
+        </div>
+        <span class="item-subtotal">₡${item.subtotal.toLocaleString('es-CR')}</span>
+        <button class="item-del" onclick="eliminarItem(${i})" aria-label="Eliminar">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>`).join('');
+
+    calcularTotales();
+  }
+
+  function cambiarQty(i, delta) {
+    const nueva = carrito[i].cantidad + delta;
+    if (nueva < 1) return;
+    carrito[i].cantidad = nueva;
+    carrito[i].subtotal = nueva * carrito[i].precioUnitario;
+    localStorage.setItem(CART_KEY, JSON.stringify(carrito));
+    cargarCarrito();
+  }
+
+  function eliminarItem(i) {
+    if (!confirm('¿Eliminar este producto?')) return;
+    carrito.splice(i,1);
+    localStorage.setItem(CART_KEY, JSON.stringify(carrito));
+    cargarCarrito();
+    mostrarToast('Producto eliminado','ok');
+  }
+
+  function vaciarCarrito() {
+    if (!confirm('¿Vaciar todo el carrito?')) return;
+    localStorage.removeItem(CART_KEY);
+    carrito = [];
+    cargarCarrito();
+    mostrarToast('Carrito vaciado','ok');
+  }
+
+  function calcularTotales() {
+    const subtotal  = carrito.reduce((s,i) => s + i.subtotal, 0);
+    const tipo      = document.querySelector('input[name="tipoEntrega"]:checked')?.value || 'express';
+    costoExpress    = 0;
+
+    if (tipo === 'express' && (distanciaKm > 0 || usarDirManual)) {
+      const km = distanciaKm > 0 ? distanciaKm : 5;
+      costoExpress = Math.round(km * config.tarifaExpress);
+      document.getElementById('filaExpress').style.display = 'flex';
+      document.getElementById('costoExpressDisplay').textContent = '₡' + costoExpress.toLocaleString('es-CR');
+    } else {
+      document.getElementById('filaExpress').style.display = 'none';
+    }
+    const total = subtotal + costoExpress;
+    document.getElementById('subtotal').textContent  = '₡' + subtotal.toLocaleString('es-CR');
+    document.getElementById('totalFinal').textContent = '₡' + total.toLocaleString('es-CR');
+  }
+
+  // ============================================
+  // PASOS
+  // ============================================
+  function irAPaso(n) {
+    if (n === 2 && !carrito.length) {
+      mostrarToast('Tu carrito está vacío','error'); return;
+    }
+    if (n === 3 && !validarPaso2()) return;
+
+    [1,2,3].forEach(i => {
+      document.getElementById(`step${i}Content`).style.display = (i === n ? 'block' : 'none');
+      const num = document.getElementById(`sn${i}`);
+      const lbl = document.getElementById(`sl${i}`);
+      num.classList.remove('active','done');
+      lbl.classList.remove('active');
+      if (i < n)  { num.classList.add('done'); num.innerHTML = '<i class="fas fa-check" style="font-size:12px"></i>'; }
+      else if (i === n) { num.classList.add('active'); num.textContent = i; lbl.classList.add('active'); }
+      else { num.textContent = i; }
+    });
+    [12,23].forEach(pair => {
+      const el = document.getElementById(`ss${pair}`);
+      const from = Math.floor(pair/10), to = pair%10;
+      el.classList.toggle('done', n > to || (n >= from && n > from));
+    });
+
+    pasoActual = n;
+    window.scrollTo({top:0,behavior:'smooth'});
+    if (n === 3) armarResumen();
+  }
+
+  // ============================================
+  // TOGGLE
+  // ============================================
+  function toggleReceptor() {
+    const igual = document.getElementById('mismoReceptor').checked;
+    const div   = document.getElementById('datosReceptorDiv');
+    div.style.opacity = igual ? '0.45' : '1';
+    div.style.pointerEvents = igual ? 'none' : 'auto';
+    div.querySelectorAll('input').forEach(inp => inp.required = !igual);
+  }
+
+  function toggleEntrega() {
+    const tipo = document.querySelector('input[name="tipoEntrega"]:checked').value;
+    document.getElementById('seccionExpress').style.display = tipo === 'express' ? 'block' : 'none';
+    document.getElementById('infoRecogida').style.display   = tipo === 'recogida' ? 'block' : 'none';
+
+    const pagoEf = document.getElementById('pagoEfectivo');
+    if (tipo === 'express') {
+      pagoEf.classList.add('disabled');
+      const efInput = pagoEf.querySelector('input');
+      if (efInput.checked) document.querySelector('input[name="pago"][value="sinpe"]').checked = true;
+    } else {
+      pagoEf.classList.remove('disabled');
+    }
+
+    // Iniciar mapa si es express y aún no cargó
+    if (tipo === 'express') {
+      setTimeout(() => {
+        if (!map) inicializarMapa();
+        else map.invalidateSize();
+      }, 150);
+    }
+    calcularTotales();
+  }
+
+  // ============================================
+  // VALIDACIÓN PASO 2
+  // ============================================
+  function validarPaso2() {
+    const nomC = document.getElementById('nombreComprador').value.trim();
+    const telC = document.getElementById('telefonoComprador').value.trim();
+    const fecha= document.getElementById('fecha').value;
+    const tipo = document.querySelector('input[name="tipoEntrega"]:checked').value;
+    const igual = document.getElementById('mismoReceptor').checked;
+
+    if (!nomC) { mostrarToast('Ingresa tu nombre','error'); document.getElementById('nombreComprador').focus(); return false; }
+    if (!validarTel(telC)) { mostrarToast('Teléfono inválido (ej: 8888-8888)','error'); document.getElementById('telefonoComprador').focus(); return false; }
+    if (!fecha) { mostrarToast('Selecciona la fecha de entrega','error'); return false; }
+
+    if (!igual) {
+      const nomR = document.getElementById('nombreReceptor').value.trim();
+      const telR = document.getElementById('telefonoReceptor').value.trim();
+      if (!nomR) { mostrarToast('Ingresa el nombre de quien recibe','error'); return false; }
+      if (!validarTel(telR)) { mostrarToast('Teléfono de receptor inválido','error'); return false; }
+    }
+
+    if (tipo === 'express') {
+      const refs = document.getElementById('referencias').value.trim();
+      if (!refs) { mostrarToast('Ingresa la dirección de entrega','error'); document.getElementById('referencias').focus(); return false; }
+      if (!marker && !usarDirManual) {
+        mostrarToast('Marca tu ubicación en el mapa o usa dirección de texto','error'); return false;
+      }
+    }
+    return true;
+  }
+
+  function validarTel(t) {
+    return /^\d{4}-\d{4}$/.test(t);
+  }
+
+  // ============================================
+  // MAPA LEAFLET (carga diferida)
+  // ============================================
+  function cargarLeaflet(callback) {
+    if (leafletLoaded || window.L) { leafletLoaded = true; callback(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = () => { leafletLoaded = true; callback(); };
+    script.onerror = () => {
+      document.getElementById('mapLoadingMsg').style.display = 'none';
+      document.getElementById('mapErrorMsg').style.display   = 'block';
+    };
+    document.head.appendChild(script);
+  }
+
+  function inicializarMapa() {
+    document.getElementById('mapLoadingMsg').style.display = 'block';
+    document.getElementById('mapErrorMsg').style.display   = 'none';
+    cargarLeaflet(_initMap);
+  }
+
+  function _initMap() {
+    if (map) { map.invalidateSize(); document.getElementById('mapLoadingMsg').style.display = 'none'; document.getElementById('map').style.display = 'block'; return; }
+    try {
+      document.getElementById('map').style.display = 'block';
+      map = L.map('map', { center:[FLORISTERIA.lat, FLORISTERIA.lng], zoom:14, zoomControl:false });
+      L.control.zoom({ position:'bottomright' }).addTo(map);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+        attribution:'© OpenStreetMap', maxZoom:19
+      }).addTo(map);
+
+      // Marcador floristería
+      const iconTienda = L.divIcon({
+        html:`<div style="background:var(--verde,#2D5A3D);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:16px;">🌸</div>`,
+        className:'', iconSize:[32,32], iconAnchor:[16,16]
+      });
+      L.marker([FLORISTERIA.lat, FLORISTERIA.lng], {icon:iconTienda}).addTo(map)
+        .bindPopup('<b>Floristería Santa Bárbara</b><br>Punto de partida').openPopup();
+
+      L.circle([FLORISTERIA.lat, FLORISTERIA.lng],{
+        color:'#2D5A3D', fillColor:'#2D5A3D', fillOpacity:.08, radius:12000, weight:1.5
+      }).addTo(map);
+
+      map.on('click', e => {
+        usarDirManual = false;
+        if (marker) map.removeLayer(marker);
+        const iconCliente = L.divIcon({
+          html:`<div style="background:#C41E3A;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:14px;">📍</div>`,
+          className:'', iconSize:[28,28], iconAnchor:[14,14]
+        });
+        marker = L.marker(e.latlng, { icon:iconCliente, draggable:true }).addTo(map)
+          .bindPopup('Tu ubicación de entrega').openPopup();
+        calcularDistancia(e.latlng.lat, e.latlng.lng);
+        marker.on('dragend', ev => calcularDistancia(ev.target.getLatLng().lat, ev.target.getLatLng().lng));
+      });
+
+      document.getElementById('mapLoadingMsg').style.display = 'none';
+      setTimeout(() => map.invalidateSize(), 300);
+    } catch(e) {
+      document.getElementById('mapLoadingMsg').style.display = 'none';
+      document.getElementById('mapErrorMsg').style.display   = 'block';
+    }
+  }
+
+  function recargarMapa() {
+    if (map) { map.remove(); map = null; }
+    document.getElementById('map').style.display = 'none';
+    document.getElementById('mapErrorMsg').style.display = 'none';
+    inicializarMapa();
+  }
+
+  function calcularDistancia(lat, lng) {
+    const R = 6371;
+    const dLat = (lat - FLORISTERIA.lat) * Math.PI/180;
+    const dLon = (lng - FLORISTERIA.lng) * Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(FLORISTERIA.lat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
+    distanciaKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    costoExpress = Math.round(distanciaKm * config.tarifaExpress);
+
+    document.getElementById('infoDistancia').style.display = 'block';
+    document.getElementById('distanciaTexto').textContent   = distanciaKm.toFixed(1) + ' km';
+    document.getElementById('costoExpress').textContent     = '₡' + costoExpress.toLocaleString('es-CR');
+    calcularTotales();
+  }
+
+  function usarDireccionTexto() {
+    const dir = document.getElementById('direccionTexto').value.trim();
+    if (!dir) { mostrarToast('Ingresa una dirección primero','error'); return; }
+    usarDirManual = true;
+    if (!distanciaKm) distanciaKm = 5;
+    costoExpress = Math.round(distanciaKm * config.tarifaExpress);
+    document.getElementById('infoDistancia').style.display = 'block';
+    document.getElementById('distanciaTexto').textContent   = '~' + distanciaKm.toFixed(1) + ' km (estimado)';
+    document.getElementById('costoExpress').textContent     = '₡' + costoExpress.toLocaleString('es-CR');
+    if (!document.getElementById('referencias').value) document.getElementById('referencias').value = dir;
+    calcularTotales();
+    mostrarToast('Dirección manual guardada ✓','ok');
+  }
+
+  // ============================================
+  // RESUMEN PASO 3
+  // ============================================
+  function armarResumen() {
+    const subtotal = carrito.reduce((s,i) => s + i.subtotal, 0);
+    const tipo     = document.querySelector('input[name="tipoEntrega"]:checked').value;
+    const nomC = document.getElementById('nombreComprador').value;
+    const telC = document.getElementById('telefonoComprador').value;
+    const igual  = document.getElementById('mismoReceptor').checked;
+    const nomR = igual ? nomC : document.getElementById('nombreReceptor').value;
+    const telR = igual ? telC : document.getElementById('telefonoReceptor').value;
+    const fecha  = document.getElementById('fecha').value;
+    const horario= document.getElementById('horario').value;
+    const msg    = document.getElementById('mensajeTarjeta').value;
+    const obs    = document.getElementById('observaciones').value;
+    const dirTxt = document.getElementById('direccionTexto').value;
+    const refs   = document.getElementById('referencias')?.value || '';
+
+    // Productos resumen
+    document.getElementById('resumenProductos').innerHTML = carrito.map(it => `
+      <div class="resumen-item">
+        <div class="resumen-item-left">
+          <span class="resumen-qty-badge">${it.cantidad}x</span>
+          <span>${it.nombre}</span>
+        </div>
+        <span style="font-weight:600">₡${it.subtotal.toLocaleString('es-CR')}</span>
+      </div>`).join('');
+
+    document.getElementById('resumenSubtotal').textContent = '₡' + subtotal.toLocaleString('es-CR');
+    if (tipo === 'express' && (distanciaKm > 0 || usarDirManual)) {
+      document.getElementById('filaExpressResumen').style.display = 'flex';
+      document.getElementById('resumenDistancia').textContent = distanciaKm > 0 ? distanciaKm.toFixed(1) + ' km' : '~5 km est.';
+      document.getElementById('resumenExpress').textContent   = '₡' + costoExpress.toLocaleString('es-CR');
+    } else {
+      document.getElementById('filaExpressResumen').style.display = 'none';
+    }
+    document.getElementById('resumenTotal').textContent = '₡' + (subtotal + costoExpress).toLocaleString('es-CR');
+
+    // Datos entrega
+    const tipoLabel = tipo === 'express' ? '🚚 Express a domicilio' : '🏪 Recogida en tienda';
+    document.getElementById('resumenEntregaBox').innerHTML = `
+      <div class="resumen-row"><strong>Comprador</strong>${nomC} · ${telC}</div>
+      <div class="resumen-row"><strong>Receptor</strong>${nomR} · ${telR} ${igual ? '<span class="tag-mismo">misma persona</span>' : ''}</div>
+      <div class="resumen-row"><strong>Fecha</strong>${fecha} — ${horario}</div>
+      <div class="resumen-row"><strong>Entrega</strong>${tipoLabel}</div>
+      ${tipo === 'express' ? `<div class="resumen-row"><strong>Dirección</strong>${dirTxt || refs}</div>` : ''}
+      ${msg ? `<div class="resumen-row" style="font-style:italic;color:var(--gris)">"${msg}"</div>` : ''}
+      ${obs ? `<div class="resumen-row"><strong>Notas</strong>${obs}</div>` : ''}
+    `;
+
+    // Efectivo solo si recogida
+    document.getElementById('pagoEfectivo').classList.toggle('disabled', tipo === 'express');
+    if (tipo === 'express') {
+      const ef = document.querySelector('input[name="pago"][value="efectivo"]');
+      if (ef && ef.checked) document.querySelector('input[name="pago"][value="sinpe"]').checked = true;
+    }
+  }
+
+  // ============================================
+  // ENVIAR PEDIDO
+  // ============================================
+  function enviarPedido() {
+    if (!document.getElementById('terminos').checked) {
+      mostrarToast('Debes aceptar los términos','error'); return;
+    }
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando…';
+
+    try {
+      const nomC  = document.getElementById('nombreComprador').value.trim();
+      const telC  = document.getElementById('telefonoComprador').value.trim();
+      const igual = document.getElementById('mismoReceptor').checked;
+      const nomR  = igual ? nomC : document.getElementById('nombreReceptor').value.trim();
+      const telR  = igual ? telC : document.getElementById('telefonoReceptor').value.trim();
+      const fecha = document.getElementById('fecha').value;
+      const horario= document.getElementById('horario').value;
+      const msg   = document.getElementById('mensajeTarjeta').value.trim();
+      const obs   = document.getElementById('observaciones').value.trim();
+      const tipo  = document.querySelector('input[name="tipoEntrega"]:checked').value;
+      const pago  = document.querySelector('input[name="pago"]:checked').value;
+      const refs  = document.getElementById('referencias')?.value.trim() || '';
+      const dirTxt= document.getElementById('direccionTexto')?.value.trim() || '';
+      const emailCopia = document.getElementById('emailCopia').value.trim();
+      const envEmail   = document.getElementById('enviarEmail').checked;
+      const subtotal   = carrito.reduce((s,i) => s + i.subtotal, 0);
+      const total      = subtotal + costoExpress;
+      const pedidoId   = 'PED-' + Date.now().toString().slice(-6);
+
+      // Guardar historial
+      const pedido = {
+        id: pedidoId, fecha: new Date().toISOString(),
+        cliente: nomC, telefonoCliente: telC,
+        receptor: nomR, telefonoReceptor: telR,
+        fechaEntrega: fecha, horario,
+        productos: [...carrito], subtotal,
+        envio: tipo === 'express' ? costoExpress : 0, total,
+        tipoEntrega: tipo, metodoPago: pago,
+        mensajeTarjeta: msg, observaciones: obs,
+        direccion: dirTxt || refs,
+        coordenadas: marker ? { lat: marker.getLatLng().lat, lng: marker.getLatLng().lng } : null,
+        estado: 'nuevo'
+      };
+      guardarPedido(pedido);
+
+      // Construir mensaje
+      let txt  = `🌸 *Floristería Santa Bárbara* — Nuevo pedido\n\n`;
+      txt += `*PEDIDO #${pedidoId}*\n`;
+      txt += `━━━━━━━━━━━━━━━━\n\n`;
+      txt += `*👤 QUIEN COMPRA:*\nNombre: ${nomC}\nTeléfono: ${telC}\n\n`;
+      txt += `*🎁 QUIEN RECIBE:*\nNombre: ${nomR}\nTeléfono: ${telR}${igual ? '\n_(misma persona)_' : ''}\n\n`;
+      txt += `*🗓️ ENTREGA:*\nFecha: ${fecha}\nHorario: ${horario}\nTipo: ${tipo === 'express' ? 'Express a domicilio 🚚' : 'Recogida en tienda 🏪'}\n`;
+      if (tipo === 'express') {
+        txt += `Distancia: ${distanciaKm > 0 ? distanciaKm.toFixed(1) + ' km' : '~5 km (estimado)'}\n`;
+        txt += `Costo envío: ₡${costoExpress.toLocaleString('es-CR')}\n`;
+        if (dirTxt || refs) txt += `Dirección: ${dirTxt || refs}\n`;
+        if (pedido.coordenadas) txt += `Maps: https://maps.google.com/?q=${pedido.coordenadas.lat},${pedido.coordenadas.lng}\n`;
+      }
+      txt += `\n*🛍️ PRODUCTOS:*\n`;
+      carrito.forEach(i => txt += `• ${i.nombre} x${i.cantidad} = ₡${i.subtotal.toLocaleString('es-CR')}\n`);
+      if (msg) txt += `\n*💌 TARJETA:*\n_"${msg}"_\n`;
+      if (obs) txt += `\n*📝 NOTAS:*\n${obs}\n`;
+      txt += `\n*💳 PAGO:*\nMétodo: ${pago === 'sinpe' ? 'SINPE Móvil' : 'Efectivo'}\n`;
+      if (pago === 'sinpe') txt += `Enviar comprobante al: ${config.whatsapp.slice(3)}\n`;
+      txt += `Subtotal: ₡${subtotal.toLocaleString('es-CR')}\n`;
+      if (tipo === 'express') txt += `Envío: ₡${costoExpress.toLocaleString('es-CR')}\n`;
+      txt += `*💰 TOTAL: ₡${total.toLocaleString('es-CR')}*\n\n¡Gracias! 🌺`;
+      textoPedido = txt;
+
+      // Email copia
+      if (envEmail && emailCopia) {
+        const asunto = `Copia de tu pedido #${pedidoId} – Floristería Santa Bárbara`;
+        setTimeout(() => window.open(`mailto:${emailCopia}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(txt)}`, '_blank'), 800);
+      }
+
+      // Limpiar carrito
+      localStorage.removeItem(CART_KEY);
+      carrito = [];
+      limpiarFormGuardado();
+
+      // Limpiar mapa
+      if (marker && map) { map.removeLayer(marker); marker = null; }
+      distanciaKm = 0; costoExpress = 0; usarDirManual = false;
+      document.getElementById('infoDistancia').style.display = 'none';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:22px"></i><span>Enviar pedido por WhatsApp</span>';
+        document.getElementById('waModal').classList.add('open');
+      }, 500);
+
+    } catch(e) {
+      console.error(e);
+      mostrarToast('Error al preparar el pedido. Intenta de nuevo.','error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:22px"></i><span>Enviar pedido por WhatsApp</span>';
+    }
+  }
+
+  function guardarPedido(p) {
+    let hist = JSON.parse(localStorage.getItem(PEDIDOS_KEY) || '[]');
+    hist.unshift(p);
+    if (hist.length > 50) hist = hist.slice(0,50);
+    localStorage.setItem(PEDIDOS_KEY, JSON.stringify(hist));
+  }
+
+  // ============================================
+  // MODAL WA
+  // ============================================
+  function cerrarWaModal() {
+    document.getElementById('waModal').classList.remove('open');
+    // Volver a paso 1 después de cerrar
+    cargarCarrito();
+    irAPaso(1);
+  }
+  function abrirWaApp() {
+    window.location.href = `https://wa.me/${config.whatsapp}?text=${encodeURIComponent(textoPedido)}`;
+    setTimeout(() => { if (!document.hidden) mostrarToast('Si no se abrió, usa WhatsApp Web','error'); }, 2500);
+  }
+  function abrirWaWeb() {
+    window.open(`https://web.whatsapp.com/send?phone=${config.whatsapp}&text=${encodeURIComponent(textoPedido)}`, '_blank');
+    cerrarWaModal();
+  }
+  function copiarPedido() {
+    navigator.clipboard.writeText(textoPedido).then(() => {
+      mostrarToast('¡Texto copiado! Pégalo en WhatsApp','ok');
+      cerrarWaModal();
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = textoPedido; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      mostrarToast('¡Texto copiado!','ok');
+      cerrarWaModal();
+    });
+  }
+
+  document.getElementById('waModal').addEventListener('click', e => { if(e.target===e.currentTarget) cerrarWaModal(); });
+
+  // ============================================
+  // TOAST
+  // ============================================
+  function mostrarToast(msg, tipo='ok') {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    const icon = t.querySelector('i');
+    icon.className = tipo === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+    t.className = `toast ${tipo}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ============================================
+  // RECUPERACIÓN DE FORMULARIO
+  // ============================================
+  const FORM_IDS = ['nombreComprador','telefonoComprador','nombreReceptor','telefonoReceptor',
+                    'fecha','horario','mensajeTarjeta','observaciones','referencias','direccionTexto','emailCopia'];
+  function escucharFormulario() {
+    FORM_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => localStorage.setItem('form_'+id, el.value));
+    });
+  }
+  function restaurarFormulario() {
+    FORM_IDS.forEach(id => {
+      const val = localStorage.getItem('form_'+id);
+      const el  = document.getElementById(id);
+      if (val && el) el.value = val;
+    });
+  }
+  function limpiarFormGuardado() {
+    FORM_IDS.forEach(id => localStorage.removeItem('form_'+id));
+  }
+
+  // Inicializar mapa automáticamente si express está seleccionado (es el default)
+  document.addEventListener('DOMContentLoaded', () => {
+    // No inicializa hasta paso 2 para no bloquear la carga inicial
+  });
+
+  // Advertir si sale con carrito lleno
+  window.addEventListener('beforeunload', e => {
+    if (carrito.length > 0 && pasoActual < 3) {
+      e.preventDefault(); e.returnValue = '';
+    }
+  });
+</script>
+</body>
+</html>
