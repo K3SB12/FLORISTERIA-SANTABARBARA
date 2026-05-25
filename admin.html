@@ -736,7 +736,12 @@
     document.getElementById('pedidoModalTitulo').textContent = `Pedido #${p.id}`;
     document.getElementById('pedidoEstadoSelect').value = p.estado || 'nuevo';
 
-    const prods = (p.productos||[]).map(i => `<div class="detalle-row"><span>${i.nombre} x${i.cantidad}</span><span>₡${i.subtotal?.toLocaleString('es-CR')}</span></div>`).join('');
+    const prods = (p.productos||[]).map(i => {
+        const prodOriginal = datos.productos.find(prod => prod.id === i.id);
+        const cod = prodOriginal?.codigo || '';
+        const nombreMostrar = cod ? `${i.nombre} <span style="color:var(--gris);font-size:11px">(${cod})</span>` : i.nombre;
+        return `<div class="detalle-row"><span>${nombreMostrar} x${i.cantidad}</span><span>₡${i.subtotal?.toLocaleString('es-CR')}</span></div>`;
+    }).join('');
     document.getElementById('pedidoModalContenido').innerHTML = `
       <div class="detalle-row"><span><b>Cliente</b></span><span>${p.cliente} · ${p.telefonoCliente}</span></div>
       <div class="detalle-row"><span><b>Receptor</b></span><span>${p.receptor||'-'} · ${p.telefonoReceptor||'-'}</span></div>
