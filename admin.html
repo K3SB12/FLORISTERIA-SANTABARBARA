@@ -303,8 +303,30 @@
 </head>
 <body>
 
+<!-- ─── PANTALLA DE PIN ─── -->
+<div id="gatePinScreen" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#1a3828,#2D5A3D);display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="emoji">🔐</span>
+      <h1>Acceso Restringido</h1>
+      <p>Ingresa el PIN de 4 dígitos para continuar</p>
+    </div>
+    <div class="form-field">
+      <label for="gatePin">PIN de seguridad</label>
+      <input type="password" id="gatePin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocomplete="off"
+        onkeydown="if(event.key==='Enter') verificarGatePin()">
+    </div>
+    <button class="btn-login" onclick="verificarGatePin()">
+      <i class="fas fa-lock" style="margin-right:8px"></i>Acceder
+    </button>
+    <p style="text-align:center;margin-top:14px;font-size:12px;color:var(--gris);">
+      <span id="gatePinMsg"></span>
+    </p>
+  </div>
+</div>
+
 <!-- ─── LOGIN ─── -->
-<div id="loginScreen">
+<div id="loginScreen" style="display:none; min-height:100vh; align-items:center; justify-content:center; padding:20px; background:linear-gradient(135deg,#1a3828,#2D5A3D);">
   <div class="login-card">
     <div class="login-logo">
       <span class="emoji">🌸</span>
@@ -573,6 +595,10 @@
   const STORAGE_KEY = 'floristeria_completa';
   const AUTH_KEY    = 'admin_auth';
   const PEDIDOS_KEY = 'sb_pedidos_historial';
+  const GATE_PIN_KEY = 'gate_pin_hash';
+  const GATE_ATTEMPTS_KEY = 'gate_attempts';
+  const MAX_GATE_ATTEMPTS = 5;
+  const BLOCK_TIME = 5 * 60 * 1000;
 
   let datos = {
     productos: [], categorias: [], pedidos: [],
@@ -582,17 +608,94 @@
   let pedidoActivoId = null;
 
   // ========================================
+  // GATE PIN
+  // ========================================
+  async function verificarGatePin() {
+    const pin = document.getElementById('gatePin').value;
+    if (!/^\d{4}$/.test(pin)) {
+      mostrarErrorGate('El PIN debe tener exactamente 4 dígitos');
+      return;
+    }
+
+    const intentosGuardados = JSON.parse(localStorage.getItem(GATE_ATTEMPTS_KEY) || '{"intentos":0,"hasta":0}');
+    if (intentosGuardados.hasta > Date.now()) {
+      const minRestantes = Math.ceil((intentosGuardados.hasta - Date.now()) / 60000);
+      mostrarErrorGate(`Demasiados intentos. Intenta de nuevo en ${minRestantes} minuto(s)`);
+      return;
+    }
+
+    const pinHashGuardado = localStorage.getItem(GATE_PIN_KEY);
+    const hashIngresado = await sha256('gate-' + pin);
+
+    if (!pinHashGuardado) {
+      if (confirm('No hay un PIN de seguridad configurado. ¿Deseas establecerlo ahora?\n\nTu PIN será: ' + pin)) {
+        localStorage.setItem(GATE_PIN_KEY, hashIngresado);
+        localStorage.removeItem(GATE_ATTEMPTS_KEY);
+        mostrarLoginScreen();
+        toast('PIN de seguridad establecido. Recuérdalo bien.', 'ok');
+      }
+    } else if (pinHashGuardado === hashIngresado) {
+      localStorage.removeItem(GATE_ATTEMPTS_KEY);
+      mostrarLoginScreen();
+    } else {
+      let intentos = intentosGuardados.intentos + 1;
+      let hasta = intentosGuardados.hasta;
+      if (intentos >= MAX_GATE_ATTEMPTS) {
+        hasta = Date.now() + BLOCK_TIME;
+        mostrarErrorGate('Cuenta bloqueada por 5 minutos por demasiados intentos fallidos');
+      } else {
+        mostrarErrorGate(`PIN incorrecto. Te quedan ${MAX_GATE_ATTEMPTS - intentos} intento(s)`);
+      }
+      localStorage.setItem(GATE_ATTEMPTS_KEY, JSON.stringify({intentos, hasta}));
+    }
+  }
+
+  function mostrarErrorGate(msg) {
+    document.getElementById('gatePinMsg').textContent = msg;
+    document.getElementById('gatePin').value = '';
+  }
+
+  function mostrarLoginScreen() {
+    document.getElementById('gatePinScreen').style.display = 'none';
+    const loginEl = document.getElementById('loginScreen');
+    loginEl.style.display = 'flex';
+    loginEl.style.minHeight = '100vh';
+    loginEl.style.alignItems = 'center';
+    loginEl.style.justifyContent = 'center';
+    loginEl.style.padding = '20px';
+    loginEl.style.background = 'linear-gradient(135deg,#1a3828,#2D5A3D)';
+    document.getElementById('gatePin').value = '';
+  }
+
+  // Limpiar bloqueo si ya expiró
+  function limpiarBloqueoGate() {
+    const bloqueo = JSON.parse(localStorage.getItem(GATE_ATTEMPTS_KEY) || '{"intentos":0,"hasta":0}');
+    if (bloqueo.hasta > 0 && bloqueo.hasta <= Date.now()) {
+      localStorage.removeItem(GATE_ATTEMPTS_KEY);
+    }
+  }
+
+  // ========================================
   // AUTH
   // ========================================
   window.onload = () => {
+    limpiarBloqueoGate();
     // Restaurar campos github
     const repo  = localStorage.getItem('gh_repo');
     const token = localStorage.getItem('gh_token');
     if (repo)  setTimeout(() => { const el = document.getElementById('githubRepo');  if(el) el.value=repo; }, 200);
     if (token) setTimeout(() => { const el = document.getElementById('githubToken'); if(el) el.value=token; }, 200);
 
-    if (localStorage.getItem(AUTH_KEY) === 'ok') mostrarDashboard();
-    else document.getElementById('loginHint').style.display = 'block';
+    if (localStorage.getItem(AUTH_KEY) === 'ok') {
+      // Si ya hay sesión, ocultar todo y mostrar dashboard directamente
+      document.getElementById('gatePinScreen').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'none';
+      mostrarDashboard();
+    } else {
+      // Mostrar pantalla de PIN, ocultar login
+      document.getElementById('gatePinScreen').style.display = 'flex';
+      document.getElementById('loginScreen').style.display = 'none';
+    }
   };
 
   async function login() {
@@ -637,6 +740,7 @@
   }
 
   function mostrarDashboard() {
+    document.getElementById('gatePinScreen').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboard').style.display   = 'block';
     cargarDatos();
@@ -737,10 +841,10 @@
     document.getElementById('pedidoEstadoSelect').value = p.estado || 'nuevo';
 
     const prods = (p.productos||[]).map(i => {
-        const prodOriginal = datos.productos.find(prod => prod.id === i.id);
-        const cod = prodOriginal?.codigo || '';
-        const nombreMostrar = cod ? `${i.nombre} <span style="color:var(--gris);font-size:11px">(${cod})</span>` : i.nombre;
-        return `<div class="detalle-row"><span>${nombreMostrar} x${i.cantidad}</span><span>₡${i.subtotal?.toLocaleString('es-CR')}</span></div>`;
+      const prodOriginal = datos.productos.find(prod => prod.id === i.id);
+      const cod = prodOriginal?.codigo || '';
+      const nombreMostrar = cod ? `${i.nombre} <span style="color:var(--gris);font-size:11px">(${cod})</span>` : i.nombre;
+      return `<div class="detalle-row"><span>${nombreMostrar} x${i.cantidad}</span><span>₡${i.subtotal?.toLocaleString('es-CR')}</span></div>`;
     }).join('');
     document.getElementById('pedidoModalContenido').innerHTML = `
       <div class="detalle-row"><span><b>Cliente</b></span><span>${p.cliente} · ${p.telefonoCliente}</span></div>
@@ -762,7 +866,6 @@
     const idx = datos.pedidos.findIndex(p => p.id===pedidoActivoId);
     if (idx === -1) return;
     datos.pedidos[idx].estado = nuevoEstado;
-    // También actualizar en historial
     let hist = JSON.parse(localStorage.getItem(PEDIDOS_KEY)||'[]');
     const hidx = hist.findIndex(p => p.id===pedidoActivoId);
     if (hidx > -1) hist[hidx].estado = nuevoEstado;
@@ -1041,11 +1144,9 @@
     const repo    = document.getElementById('githubRepo').value.trim();
     const token   = document.getElementById('githubToken').value.trim();
 
-    // Intentar push automático a GitHub si hay token y repo
     if (repo && token) {
       try {
         const apiBase = `https://api.github.com/repos/${repo}/contents/catalogo.json`;
-        // Obtener SHA actual del archivo
         let sha = null;
         const getRes = await fetch(apiBase, { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } });
         if (getRes.ok) { const d = await getRes.json(); sha = d.sha; }
@@ -1070,7 +1171,6 @@
       }
     }
 
-    // Fallback: descarga manual
     descargar(json, 'catalogo.json', 'application/json');
     toast('catalogo.json descargado. Súbelo a tu repositorio GitHub.','ok');
   }
