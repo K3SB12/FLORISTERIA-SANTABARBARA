@@ -372,30 +372,37 @@
     }
 
     /* ─── INDICADOR DE PAGO (CHECK) ─── */
+    /* ─── INDICADOR DE PAGO ACCESIBLE ─── */
     .pago-opt {
-        position: relative !important;
+      position: relative;
+      padding-right: 40px;  /* espacio para el check */
     }
-    .pago-opt::after {
-        content: '✓';
-        position: absolute;
-        top: 10px; right: 10px;
-        width: 20px; height: 20px;
-        background: var(--verde);
-        color: #fff;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 700;
-        transform: scale(0);
-        transition: transform 0.2s;
+    .check-indicator {
+      position: absolute;
+      top: 12px; right: 12px;
+      width: 28px;           /* más grande para mejor visibilidad */
+      height: 28px;
+      border-radius: 50%;
+      background: var(--verde);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      transform: scale(0);
+      transition: transform 0.2s;
     }
-    .pago-opt:has(input:checked)::after {
-        transform: scale(1);
+    .check-indicator::after {
+      content: '✓';
     }
-    .pago-opt.disabled::after {
-        transform: scale(0) !important;
+    /* Muestra el check cuando el radio está marcado */
+    .pago-opt input:checked ~ .check-indicator {
+      transform: scale(1);
+    }
+    /* Oculta el check si la opción está deshabilitada (efectivo en express) */
+    .pago-opt.disabled .check-indicator {
+      transform: scale(0) !important;
     }
 
     /* ─── CHECKBOX EMAIL PERSONALIZADO ─── */
@@ -702,6 +709,7 @@
         <div class="pago-opts">
           <label class="pago-opt">
             <input type="radio" name="pago" value="sinpe" checked>
+            <span class="check-indicator" aria-hidden="true"></span>
             <i class="fas fa-mobile-alt pago-opt-icon"></i>
             <div class="pago-opt-info">
               <strong>SINPE Móvil</strong>
@@ -710,6 +718,7 @@
           </label>
           <label class="pago-opt" id="pagoEfectivo">
             <input type="radio" name="pago" value="efectivo">
+            <span class="check-indicator" aria-hidden="true"></span>
             <i class="fas fa-money-bill-wave pago-opt-icon"></i>
             <div class="pago-opt-info">
               <strong>Efectivo</strong>
