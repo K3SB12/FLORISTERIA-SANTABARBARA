@@ -370,6 +370,78 @@
       .entrega-opts{grid-template-columns:1fr;}
       .btn-nav-row{flex-direction:column;}
     }
+
+    /* ─── INDICADOR DE PAGO (CHECK) ─── */
+    .pago-opt {
+        position: relative !important;
+    }
+    .pago-opt::after {
+        content: '✓';
+        position: absolute;
+        top: 10px; right: 10px;
+        width: 20px; height: 20px;
+        background: var(--verde);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        transform: scale(0);
+        transition: transform 0.2s;
+    }
+    .pago-opt:has(input:checked)::after {
+        transform: scale(1);
+    }
+    .pago-opt.disabled::after {
+        transform: scale(0) !important;
+    }
+
+    /* ─── CHECKBOX EMAIL PERSONALIZADO ─── */
+    .custom-check-input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .custom-check-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .custom-check-box {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #D1D5DB;
+        border-radius: 50%;
+        background: white;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .custom-check-input:checked + .custom-check-label .custom-check-box {
+        background: var(--verde);
+        border-color: var(--verde);
+    }
+    .custom-check-box::after {
+        content: '✓';
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .custom-check-input:checked + .custom-check-label .custom-check-box::after {
+        opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -649,14 +721,17 @@
 
       <!-- Email copia -->
       <div class="email-copy-section">
-        <label class="checkbox-label">
-          <input type="checkbox" id="enviarEmail">
-          <div>
-            <strong style="font-size:13px;display:block;margin-bottom:3px">Recibir copia del pedido por email</strong>
-            <input type="email" id="emailCopia" placeholder="tu@email.com"
-              style="margin-top:6px;font-size:13px;" onclick="document.getElementById('enviarEmail').checked=true">
+          <div class="custom-checkbox-wrap">
+            <input type="checkbox" id="enviarEmail" class="custom-check-input">
+            <label for="enviarEmail" class="custom-check-label">
+              <span class="custom-check-box"></span>
+              <div>
+                <strong style="font-size:13px;display:block;margin-bottom:3px">Recibir copia del pedido por email</strong>
+                <input type="email" id="emailCopia" placeholder="tu@email.com"
+                  style="margin-top:6px;font-size:13px;" onclick="document.getElementById('enviarEmail').checked=true">
+              </div>
+            </label>
           </div>
-        </label>
       </div>
 
       <!-- Términos -->
