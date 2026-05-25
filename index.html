@@ -741,12 +741,13 @@
       carrito[idx].cantidad++;
       carrito[idx].subtotal = carrito[idx].cantidad * precio;
     } else {
-      carrito.push({
+    carrito.push({
         id, nombre: prod.nombre,
+        codigo: prod.codigo || '',
         precioUnitario: precio,
         imagen: (prod.imagenes && prod.imagenes[0]) || '',
         cantidad: 1, subtotal: precio
-      });
+    });
     }
     localStorage.setItem(CART_KEY, JSON.stringify(carrito));
     actualizarBadge();
