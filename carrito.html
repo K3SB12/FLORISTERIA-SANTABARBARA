@@ -406,6 +406,7 @@
     }
 
     /* ─── CHECKBOX EMAIL PERSONALIZADO ─── */
+    /* ─── CHECKBOX PERSONALIZADO (email y términos) ─── */
     .custom-check-input {
         position: absolute;
         opacity: 0;
@@ -429,7 +430,8 @@
         transition: all 0.2s;
         position: relative;
     }
-    .custom-check-input:checked + .custom-check-label .custom-check-box {
+    .custom-check-input:checked + .custom-check-label .custom-check-box,
+    .custom-check-input:checked ~ .custom-check-box {
         background: var(--verde);
         border-color: var(--verde);
     }
@@ -446,7 +448,8 @@
         opacity: 0;
         transition: opacity 0.2s;
     }
-    .custom-check-input:checked + .custom-check-label .custom-check-box::after {
+    .custom-check-input:checked + .custom-check-label .custom-check-box::after,
+    .custom-check-input:checked ~ .custom-check-box::after {
         opacity: 1;
     }
   </style>
@@ -744,11 +747,12 @@
       </div>
 
       <!-- Términos -->
-      <label class="checkbox-label" style="margin-bottom:16px;padding:12px;border:1.5px solid var(--crema-dark);border-radius:10px;">
-        <input type="checkbox" id="terminos">
-        <span>Confirmo que los datos son correctos y entiendo que el pedido se procesará vía WhatsApp. Debo confirmar el pago para que sea válido. <strong style="color:var(--verde)">Acepto los términos.</strong></span>
+      <label class="custom-check-label" style="margin-bottom:16px;padding:12px;border:1.5px solid var(--crema-dark);border-radius:10px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="checkbox" id="terminos" class="custom-check-input">
+        <span class="custom-check-box"></span>
+        <span style="font-size:13px;color:var(--gris);line-height:1.5;">Confirmo que los datos son correctos y entiendo que el pedido se procesará vía WhatsApp. Debo confirmar el pago para que sea válido. <strong style="color:var(--verde)">Acepto los términos.</strong></span>
       </label>
-
+      
       <button class="btn-enviar" id="btnEnviar" onclick="enviarPedido()">
         <i class="fab fa-whatsapp"></i>
         <span>Enviar pedido por WhatsApp</span>
