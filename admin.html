@@ -667,7 +667,6 @@
     document.getElementById('gatePin').value = '';
   }
 
-  // Limpiar bloqueo si ya expiró
   function limpiarBloqueoGate() {
     const bloqueo = JSON.parse(localStorage.getItem(GATE_ATTEMPTS_KEY) || '{"intentos":0,"hasta":0}');
     if (bloqueo.hasta > 0 && bloqueo.hasta <= Date.now()) {
@@ -687,12 +686,10 @@
     if (token) setTimeout(() => { const el = document.getElementById('githubToken'); if(el) el.value=token; }, 200);
 
     if (localStorage.getItem(AUTH_KEY) === 'ok') {
-      // Si ya hay sesión, ocultar todo y mostrar dashboard directamente
       document.getElementById('gatePinScreen').style.display = 'none';
       document.getElementById('loginScreen').style.display = 'none';
       mostrarDashboard();
     } else {
-      // Mostrar pantalla de PIN, ocultar login
       document.getElementById('gatePinScreen').style.display = 'flex';
       document.getElementById('loginScreen').style.display = 'none';
     }
@@ -707,7 +704,6 @@
     const guardado = localStorage.getItem('admin_hash');
 
     if (!guardado) {
-      // Primera vez → crear cuenta
       if (!confirm(`¿Crear cuenta de admin con este correo?\n${email}\n\nGuarda bien tus datos.`)) return;
       localStorage.setItem('admin_hash', hash);
       localStorage.setItem(AUTH_KEY, 'ok');
@@ -750,14 +746,12 @@
   // DATOS
   // ========================================
   async function cargarDatos() {
-    // Intentar cargar desde localStorage
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try { datos = { ...datos, ...JSON.parse(saved) }; }
       catch(_) {}
     }
 
-    // Si no hay productos, intentar catalogo.json (para no empezar vacío)
     if (!datos.productos?.length) {
       try {
         const res = await fetch('catalogo.json?v=' + Date.now());
@@ -771,7 +765,6 @@
       } catch(_) {}
     }
 
-    // Cargar pedidos desde historial
     const hist = JSON.parse(localStorage.getItem(PEDIDOS_KEY) || '[]');
     if (hist.length) datos.pedidos = hist;
 
@@ -1023,22 +1016,96 @@
     document.getElementById('modalProducto').classList.add('open');
   }
 
+  // ========================================
+  // NUEVA FUNCIÓN: SUBIR IMAGEN A GITHUB
+  // ========================================
+  async function subirImagenAGitHub(ruta, blob) {
+    const repo = document.getElementById('githubRepo').value.trim();
+    const token = document.getElementById('githubToken').value.trim();
+    if (!repo || !token) {
+      // Fallback a base64 si no hay token configurado
+      return await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    try {
+      const base64 = await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.readAsDataURL(blob);
+      });
+
+      const apiUrl = `https://api.github.com/repos/${repo}/contents/${ruta}`;
+      const body = {
+        message: 'Subir imagen de producto',
+        content: base64,
+        branch: 'main'
+      };
+
+      const res = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${token}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // URL pública raw
+        return `https://raw.githubusercontent.com/${repo}/main/${ruta}`;
+      } else {
+        console.error('Error GitHub:', await res.json());
+        return null;
+      }
+    } catch (e) {
+      console.error('Error de red:', e);
+      return null;
+    }
+  }
+
+  // ========================================
+  // MODIFICAR procesarFotos PARA SUBIR A GITHUB
+  // ========================================
   function procesarFotos(input) {
     const files = Array.from(input.files);
-    if (fotosTemp.length + files.length > 10) { toast('Máximo 10 fotos por producto','error'); return; }
+    if (fotosTemp.length + files.length > 10) {
+      toast('Máximo 10 fotos por producto','error');
+      return;
+    }
+
     files.forEach(file => {
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = async (e) => {
         const img = new Image();
-        img.onload = () => {
+        img.onload = async () => {
           const canvas = document.createElement('canvas');
-          let w=img.width, h=img.height, max=500;
-          if (w>h && w>max) { h=h*max/w; w=max; }
-          else if (h>max)   { w=w*max/h; h=max; }
-          canvas.width=w; canvas.height=h;
-          canvas.getContext('2d').drawImage(img,0,0,w,h);
-          fotosTemp.push(canvas.toDataURL('image/jpeg',0.6));
-          renderPreviews();
+          let w = img.width, h = img.height, max = 800;
+          if (w > h && w > max) { h = h * max / w; w = max; }
+          else if (h > max) { w = w * max / h; h = max; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+          canvas.toBlob(async (blob) => {
+            if (!blob) {
+              toast('Error al procesar la imagen', 'error');
+              return;
+            }
+            const nombreArchivo = 'img/productos/' + Date.now() + '_' + Math.random().toString(36).substring(2,8) + '.jpg';
+            const url = await subirImagenAGitHub(nombreArchivo, blob);
+            if (url) {
+              fotosTemp.push(url);
+              renderPreviews();
+              toast('Foto subida correctamente', 'ok');
+            } else {
+              toast('Error al subir la imagen a GitHub. Revisa el token.', 'error');
+            }
+          }, 'image/jpeg', 0.8);
         };
         img.src = e.target.result;
       };
@@ -1048,9 +1115,9 @@
   }
 
   function renderPreviews() {
-    document.getElementById('previewFotos').innerHTML = fotosTemp.map((f,i) => `
+    document.getElementById('previewFotos').innerHTML = fotosTemp.map((f, i) => `
       <div class="foto-item">
-        <img src="${f}" alt="Foto ${i+1}">
+        <img src="${f}" alt="Foto ${i+1}" onerror="this.src='https://placehold.co/100x100?text=Error'">
         <button class="foto-del" onclick="fotosTemp.splice(${i},1);renderPreviews()">✕</button>
       </div>`).join('');
   }
