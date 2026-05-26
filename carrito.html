@@ -1266,7 +1266,14 @@
         if (pedido.coordenadas) txt += `Maps: https://maps.google.com/?q=${pedido.coordenadas.lat},${pedido.coordenadas.lng}\n`;
       }
       txt += `\n*🛍️ PRODUCTOS:*\n`;
-      carrito.forEach(i => txt += `• ${i.nombre} x${i.cantidad} = ₡${i.subtotal.toLocaleString('es-CR')}\n`);
+      carrito.forEach(i => {
+        const imagenUrl = i.imagen || ''; // el carrito guarda la primera imagen
+        txt += `• ${i.nombre} x${i.cantidad} = ₡${i.subtotal.toLocaleString('es-CR')}`;
+        if (imagenUrl) {
+          txt += `\n  📷 Ver foto: ${imagenUrl}`;
+        }
+        txt += '\n';
+      });
       if (msg) txt += `\n*💌 TARJETA:*\n_"${msg}"_\n`;
       if (obs) txt += `\n*📝 NOTAS:*\n${obs}\n`;
       txt += `\n*💳 PAGO:*\nMétodo: ${pago === 'sinpe' ? 'SINPE Móvil' : 'Efectivo'}\n`;
