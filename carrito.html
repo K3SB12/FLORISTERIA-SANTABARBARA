@@ -710,26 +710,39 @@
       <div class="form-section">
         <p class="form-section-title"><i class="fas fa-credit-card"></i> Método de pago</p>
         <div class="pago-opts">
-          <label class="pago-opt">
-            <input type="radio" name="pago" value="sinpe" checked>
-            <span class="check-indicator" aria-hidden="true"></span>
-            <i class="fas fa-mobile-alt pago-opt-icon"></i>
-            <div class="pago-opt-info">
-              <strong>SINPE Móvil</strong>
-              <span>Al número <b>8605-3613</b></span>
-            </div>
-          </label>
-          <label class="pago-opt" id="pagoEfectivo">
-            <input type="radio" name="pago" value="efectivo">
-            <span class="check-indicator" aria-hidden="true"></span>
-            <i class="fas fa-money-bill-wave pago-opt-icon"></i>
-            <div class="pago-opt-info">
-              <strong>Efectivo</strong>
-              <span>Solo disponible en recogida de tienda</span>
-            </div>
-          </label>
+            <!-- SINPE Móvil -->
+            <label class="pago-opt">
+                <input type="radio" name="pago" value="sinpe" checked>
+                <span class="check-indicator" aria-hidden="true"></span>
+                <i class="fas fa-mobile-alt pago-opt-icon"></i>
+                <div class="pago-opt-info">
+                    <strong>SINPE Móvil</strong>
+                    <span>Al número <b>8605-3613</b></span>
+                </div>
+            </label>
+        
+            <!-- Efectivo -->
+            <label class="pago-opt" id="pagoEfectivo">
+                <input type="radio" name="pago" value="efectivo">
+                <span class="check-indicator" aria-hidden="true"></span>
+                <i class="fas fa-money-bill-wave pago-opt-icon"></i>
+                <div class="pago-opt-info">
+                    <strong>Efectivo</strong>
+                    <span>Solo disponible en recogida de tienda</span>
+                </div>
+            </label>
+        
+            <!-- Transferencia bancaria -->
+            <label class="pago-opt">
+                <input type="radio" name="pago" value="transferencia">
+                <span class="check-indicator" aria-hidden="true"></span>
+                <i class="fas fa-university pago-opt-icon"></i>
+                <div class="pago-opt-info">
+                    <strong>Transferencia bancaria</strong>
+                    <span>Banco Nacional – Cuenta IBAN: CR82015104520010352913</span>
+                </div>
+            </label>
         </div>
-      </div>
 
       <!-- Email copia -->
       <div class="email-copy-section">
@@ -1276,17 +1289,31 @@
       });
       if (msg) txt += `\n*💌 TARJETA:*\n_"${msg}"_\n`;
       if (obs) txt += `\n*📝 NOTAS:*\n${obs}\n`;
-      txt += `\n*💳 PAGO:*\nMétodo: ${pago === 'sinpe' ? 'SINPE Móvil' : 'Efectivo'}\n`;
-      if (pago === 'sinpe') txt += `Enviar comprobante al: ${config.whatsapp.slice(3)}\n`;
+     // Mapear el valor del radio a un nombre amigable
+      // Método de pago
+      const metodosPago = {
+          'sinpe': 'SINPE Móvil',
+          'efectivo': 'Efectivo',
+          'transferencia': 'Transferencia bancaria'
+      };
+      const nombrePago = metodosPago[pago] || pago;
+      txt += `\n*💳 PAGO:*\nMétodo: ${nombrePago}\n`;
+      
+      if (pago === 'sinpe') {
+          txt += `Enviar comprobante al: ${config.whatsapp.slice(3)}\n`;
+      } else if (pago === 'transferencia') {
+          txt += `Banco Nacional - Cuenta IBAN: CR82015104520010352913\n`; // ← Cambia aquí los datos reales
+      }
+      
       txt += `Subtotal: ₡${subtotal.toLocaleString('es-CR')}\n`;
       if (tipo === 'express') txt += `Envío: ₡${costoExpress.toLocaleString('es-CR')}\n`;
       txt += `*💰 TOTAL: ₡${total.toLocaleString('es-CR')}*\n\n¡Gracias! 🌺`;
       textoPedido = txt;
-
+      
       // Email copia
       if (envEmail && emailCopia) {
-        const asunto = `Copia de tu pedido #${pedidoId} – Floristería Santa Bárbara`;
-        setTimeout(() => window.open(`mailto:${emailCopia}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(txt)}`, '_blank'), 800);
+          const asunto = `Copia de tu pedido #${pedidoId} – Floristería Santa Bárbara`;
+          setTimeout(() => window.open(`mailto:${emailCopia}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(txt)}`, '_blank'), 800);
       }
 
       // Limpiar carrito
