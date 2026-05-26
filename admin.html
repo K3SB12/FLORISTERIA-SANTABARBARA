@@ -833,11 +833,22 @@
     document.getElementById('pedidoModalTitulo').textContent = `Pedido #${p.id}`;
     document.getElementById('pedidoEstadoSelect').value = p.estado || 'nuevo';
 
-    const prods = (p.productos||[]).map(i => {
+   const prods = (p.productos||[]).map(i => {
       const prodOriginal = datos.productos.find(prod => prod.id === i.id);
       const cod = prodOriginal?.codigo || '';
-      const nombreMostrar = cod ? `${i.nombre} <span style="color:var(--gris);font-size:11px">(${cod})</span>` : i.nombre;
-      return `<div class="detalle-row"><span>${nombreMostrar} x${i.cantidad}</span><span>₡${i.subtotal?.toLocaleString('es-CR')}</span></div>`;
+      const imgSrc = (prodOriginal?.imagenes && prodOriginal.imagenes[0]) 
+        ? prodOriginal.imagenes[0] 
+        : 'https://placehold.co/40x40/EEE8DC/2D5A3D?text=🌸';
+      const nombreMostrar = cod 
+        ? `${i.nombre} <span style="color:var(--gris);font-size:11px">(${cod})</span>` 
+        : i.nombre;
+      return `
+        <div class="detalle-row" style="display:flex; align-items:center; gap:10px;">
+          <img src="${imgSrc}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--borde);" 
+               onerror="this.src='https://placehold.co/40x40/EEE8DC/2D5A3D?text=🌸'">
+          <span style="flex:1">${nombreMostrar} x${i.cantidad}</span>
+          <span>₡${i.subtotal?.toLocaleString('es-CR')}</span>
+        </div>`;
     }).join('');
     document.getElementById('pedidoModalContenido').innerHTML = `
       <div class="detalle-row"><span><b>Cliente</b></span><span>${p.cliente} · ${p.telefonoCliente}</span></div>
